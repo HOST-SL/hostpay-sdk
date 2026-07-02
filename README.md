@@ -5,7 +5,7 @@ Official client libraries for the HostPay API.
 | Language | Status | Path |
 | --- | --- | --- |
 | Python | ✅ available | [`python/`](python/) |
-| TypeScript | ⏳ planned | `typescript/` |
+| TypeScript | ✅ available | [`typescript/`](typescript/) |
 
 ## Source of truth
 
