@@ -9,7 +9,27 @@ description = "Python SDK for the HostPay payments API"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
+authors = [{ name = "HostPay", email = "host.sl.co@gmail.com" }]
+keywords = ["hostpay", "payments", "wallet", "mobile-money", "escrow", "sdk"]
 dependencies = ["httpx>=0.24"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://hpay.host-sl.com"
+Documentation = "https://hpay.host-sl.com/docs"
+Repository = "https://github.com/HOST-SL/host_pay"
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]

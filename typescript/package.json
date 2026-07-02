@@ -12,22 +12,47 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "keywords": [
+    "hostpay",
+    "payments",
+    "wallet",
+    "mobile-money",
+    "escrow",
+    "sdk"
+  ],
+  "author": "HostPay <host.sl.co@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://hpay.host-sl.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HOST-SL/host_pay.git",
+    "directory": "sdk/typescript"
+  },
+  "bugs": {
+    "url": "https://github.com/HOST-SL/host_pay/issues"
+  },
   "engines": {
     "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "generate": "openapi-typescript ../openapi.json -o src/generated.ts",
     "pretest": "tsc",
-    "test": "node --test"
+    "test": "node --test",
+    "prepublishOnly": "npm run build && npm test"
   },
   "devDependencies": {
     "@types/node": "^20",
     "openapi-typescript": "^7.13.0",
     "typescript": "^5"
-  },
-  "license": "MIT"
+  }
 }
