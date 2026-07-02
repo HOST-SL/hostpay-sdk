@@ -98,8 +98,14 @@ In Test Mode, a user's phone number drives deterministic outcomes (see the
 completes, `+23299000002` fails, `+23299000009` stays pending. The same fail
 number works for payout recipients.
 
-## Notes
+## Typed responses
 
-Responses are plain objects typed as `HostPayObject`, so new API fields work
-without an SDK upgrade. Strict typed models can be generated from the committed
-[`../openapi.json`](../openapi.json), the source of truth for both SDKs.
+Core responses are strictly typed from the OpenAPI spec: `users.*` return
+`User`, `wallets.create/get` return `Wallet`, `transfers`/`payouts` return
+`Transaction`, and `escrow.*` returns `Escrow` — so you get autocomplete and
+compile-time checks. Ad-hoc responses (wallet balance, the deposit envelope)
+are typed loosely as `HostPayObject`.
+
+Types are generated from the committed [`../openapi.json`](../openapi.json)
+(`src/generated.ts`) — the source of truth for both SDKs. Regenerate after API
+changes with `npm run generate`.

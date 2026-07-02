@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from .models import EscrowResponse, TransactionResponse, UserRead, WalletRead
+
 # Mobile-money providers (wire values expected by the API).
 PROVIDER_ORANGE = "m17"
 PROVIDER_AFRICELL = "m18"
@@ -24,7 +26,7 @@ class Users(_Resource):
         phone_number: str,
         email: Optional[str] = None,
         username: Optional[str] = None,
-    ) -> Any:
+    ) -> UserRead:
         return self._t.request("POST", "/api/v1/users/create/", json={
             "app_user_id": app_user_id,
             "name": name,
@@ -33,15 +35,15 @@ class Users(_Resource):
             "username": username,
         })
 
-    def get(self, user_id: str) -> Any:
+    def get(self, user_id: str) -> UserRead:
         return self._t.request("GET", f"/api/v1/users/{user_id}/")
 
 
 class Wallets(_Resource):
-    def create(self, user_id: str) -> Any:
+    def create(self, user_id: str) -> WalletRead:
         return self._t.request("POST", f"/api/v1/wallets/create/{user_id}/")
 
-    def get(self, user_id: str) -> Any:
+    def get(self, user_id: str) -> WalletRead:
         return self._t.request("GET", f"/api/v1/wallets/{user_id}/")
 
     def balance(self, wallet_id: str) -> Any:
@@ -86,7 +88,7 @@ class Transfers(_Resource):
         amount: float,
         description: Optional[str] = None,
         idempotency_key: Optional[str] = None,
-    ) -> Any:
+    ) -> TransactionResponse:
         return self._t.request(
             "POST",
             "/api/v1/transactions/wallet/transfer/",
@@ -109,7 +111,7 @@ class Payouts(_Resource):
         provider: str = PROVIDER_ORANGE,
         currency: str = "SLE",
         idempotency_key: Optional[str] = None,
-    ) -> Any:
+    ) -> TransactionResponse:
         return self._t.request(
             "POST",
             "/api/v1/transactions/wallet/mobile-money-cashout/",
@@ -130,7 +132,7 @@ class Payouts(_Resource):
         currency: str = "usd",
         description: Optional[str] = None,
         idempotency_key: Optional[str] = None,
-    ) -> Any:
+    ) -> TransactionResponse:
         return self._t.request(
             "POST",
             "/api/v1/transactions/wallet/payout/",
@@ -147,7 +149,7 @@ class Payouts(_Resource):
 class Escrow(_Resource):
     def hold(
         self, wallet_id: str, amount: float, description: Optional[str] = None
-    ) -> Any:
+    ) -> EscrowResponse:
         return self._t.request("POST", "/api/v1/escrow/hold", json={
             "wallet_id": wallet_id,
             "amount": amount,
@@ -156,14 +158,14 @@ class Escrow(_Resource):
 
     def release(
         self, transaction_id: str, recipient_wallet_id: str, amount: Optional[float] = None
-    ) -> Any:
+    ) -> EscrowResponse:
         return self._t.request(
             "POST",
             f"/api/v1/escrow/{transaction_id}/release",
             json={"recipient_wallet_id": recipient_wallet_id, "amount": amount},
         )
 
-    def refund(self, transaction_id: str, amount: Optional[float] = None) -> Any:
+    def refund(self, transaction_id: str, amount: Optional[float] = None) -> EscrowResponse:
         return self._t.request(
             "POST", f"/api/v1/escrow/{transaction_id}/refund", json={"amount": amount}
         )

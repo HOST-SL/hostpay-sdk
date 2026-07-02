@@ -12,9 +12,6 @@ import { Webhooks } from "./webhooks.js";
 
 const DEFAULT_BASE_URL = "https://hpay-api.host-sl.com";
 
-/** A response object. New API fields are preserved; access with `wallet.id`. */
-export type HostPayObject = { [key: string]: any };
-
 export interface HostPayOptions {
   apiKey: string;
   secretKey: string;

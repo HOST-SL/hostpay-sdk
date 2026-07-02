@@ -1,4 +1,5 @@
 /** Resource groups mapped to the HostPay money surface. See ../openapi.json. */
+import type { Escrow as EscrowModel, HostPayObject, Transaction, User, Wallet } from "./models.js";
 
 export interface Transport {
   request(
@@ -26,7 +27,7 @@ export class Users extends Resource {
     phoneNumber: string;
     email?: string;
     username?: string;
-  }): Promise<any> {
+  }): Promise<User> {
     return this.t.request("POST", "/api/v1/users/create/", {
       body: {
         app_user_id: params.appUserId,
@@ -38,21 +39,21 @@ export class Users extends Resource {
     });
   }
 
-  get(userId: string): Promise<any> {
+  get(userId: string): Promise<User> {
     return this.t.request("GET", `/api/v1/users/${userId}/`);
   }
 }
 
 export class Wallets extends Resource {
-  create(userId: string): Promise<any> {
+  create(userId: string): Promise<Wallet> {
     return this.t.request("POST", `/api/v1/wallets/create/${userId}/`);
   }
 
-  get(userId: string): Promise<any> {
+  get(userId: string): Promise<Wallet> {
     return this.t.request("GET", `/api/v1/wallets/${userId}/`);
   }
 
-  balance(walletId: string): Promise<any> {
+  balance(walletId: string): Promise<HostPayObject> {
     return this.t.request("GET", `/api/v1/wallets/${walletId}/balance`);
   }
 }
@@ -62,7 +63,7 @@ export class Deposits extends Resource {
     walletId: string;
     amount: number;
     idempotencyKey?: string;
-  }): Promise<any> {
+  }): Promise<HostPayObject> {
     return this.t.request(
       "POST",
       "/api/v1/transactions/wallet/mobile-money-deposit",
@@ -78,7 +79,7 @@ export class Deposits extends Resource {
     amount: number;
     paymentMethodId?: string;
     idempotencyKey?: string;
-  }): Promise<any> {
+  }): Promise<HostPayObject> {
     return this.t.request(
       "POST",
       "/api/v1/transactions/wallet/card-deposit/create",
@@ -101,7 +102,7 @@ export class Transfers extends Resource {
     amount: number;
     description?: string;
     idempotencyKey?: string;
-  }): Promise<any> {
+  }): Promise<Transaction> {
     return this.t.request("POST", "/api/v1/transactions/wallet/transfer/", {
       body: {
         sender_wallet_id: params.senderWalletId,
@@ -122,7 +123,7 @@ export class Payouts extends Resource {
     provider?: ProviderCode;
     currency?: string;
     idempotencyKey?: string;
-  }): Promise<any> {
+  }): Promise<Transaction> {
     return this.t.request(
       "POST",
       "/api/v1/transactions/wallet/mobile-money-cashout/",
@@ -145,7 +146,7 @@ export class Payouts extends Resource {
     currency?: string;
     description?: string;
     idempotencyKey?: string;
-  }): Promise<any> {
+  }): Promise<Transaction> {
     return this.t.request("POST", "/api/v1/transactions/wallet/payout/", {
       body: {
         wallet_id: params.walletId,
@@ -163,7 +164,7 @@ export class Escrow extends Resource {
     walletId: string;
     amount: number;
     description?: string;
-  }): Promise<any> {
+  }): Promise<EscrowModel> {
     return this.t.request("POST", "/api/v1/escrow/hold", {
       body: {
         wallet_id: params.walletId,
@@ -176,7 +177,7 @@ export class Escrow extends Resource {
   release(
     transactionId: string,
     params: { recipientWalletId: string; amount?: number },
-  ): Promise<any> {
+  ): Promise<EscrowModel> {
     return this.t.request("POST", `/api/v1/escrow/${transactionId}/release`, {
       body: {
         recipient_wallet_id: params.recipientWalletId,
@@ -185,7 +186,7 @@ export class Escrow extends Resource {
     });
   }
 
-  refund(transactionId: string, params: { amount?: number } = {}): Promise<any> {
+  refund(transactionId: string, params: { amount?: number } = {}): Promise<EscrowModel> {
     return this.t.request("POST", `/api/v1/escrow/${transactionId}/refund`, {
       body: { amount: params.amount },
     });

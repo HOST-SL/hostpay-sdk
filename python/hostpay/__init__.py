@@ -10,6 +10,7 @@ from .errors import (
     RateLimitError,
     SignatureVerificationError,
 )
+from .models import EscrowResponse, TransactionResponse, UserRead, WalletRead
 
 __version__ = "0.1.0"
 
@@ -23,4 +24,8 @@ __all__ = [
     "APIError",
     "APIConnectionError",
     "SignatureVerificationError",
+    "UserRead",
+    "WalletRead",
+    "TransactionResponse",
+    "EscrowResponse",
 ]

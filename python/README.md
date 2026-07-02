@@ -103,9 +103,16 @@ In Test Mode, a user's phone number drives deterministic outcomes (see the
 completes, `+23299000002` fails, `+23299000009` stays pending. The same fail
 number works for payout recipients.
 
-## Notes
+## Typed responses
 
-Responses are `HostPayObject` (dict + attribute access), so new API fields work
-without an SDK upgrade. Strict typed models can be generated from the committed
+Core methods are annotated with `TypedDict` models (`hostpay.models`): `users.*`
+return `UserRead`, `wallets.create/get` return `WalletRead`, `transfers`/
+`payouts` return `TransactionResponse`, and `escrow.*` returns `EscrowResponse`.
+A type checker (mypy/Pyright) will autocomplete and check keyed access —
+`user["id"]`, `wallet["balance"]`. Ad-hoc responses (wallet balance, the deposit
+envelope) stay loosely typed.
+
+At runtime every response is a `HostPayObject` (a dict), so both `resp["field"]`
+and `resp.field` work regardless of typing. The model fields mirror the committed
 [`../openapi.json`](../openapi.json), the source of truth for both SDKs —
-regenerate it with `python wallet-system/scripts/dump_openapi.py`.
+regenerate the spec with `python wallet-system/scripts/dump_openapi.py`.
