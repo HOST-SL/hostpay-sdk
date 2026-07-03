@@ -123,3 +123,18 @@ def test_lifecycle_and_transactions_paths():
         ("GET", "/api/v1/transactions/wallet/w1", {}),
         ("GET", "/api/v1/transactions/", {"status": "completed", "limit": "10", "offset": "0"}),
     ]
+
+
+def test_wallets_list_passes_query_params():
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["path"] = request.url.path
+        seen["query"] = dict(request.url.params)
+        return httpx.Response(200, json=[{"id": "w1", "balance": "5.00"}])
+
+    client = _client(handler)
+    wallets = client.wallets.list(is_active=True)
+    assert seen["path"] == "/api/v1/wallets/"
+    assert seen["query"] == {"is_active": "true"}
+    assert wallets[0]["id"] == "w1"

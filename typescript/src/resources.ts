@@ -98,6 +98,12 @@ export class Wallets extends Resource {
     return this.t.request("GET", `/api/v1/wallets/${walletId}/balance`);
   }
 
+  list(params: { isActive?: boolean } = {}): Promise<Wallet[]> {
+    return this.t.request("GET", "/api/v1/wallets/", {
+      query: { is_active: params.isActive },
+    });
+  }
+
   disable(walletId: string): Promise<any> {
     return this.t.request("POST", `/api/v1/wallets/${walletId}/disable`);
   }

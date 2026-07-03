@@ -116,3 +116,14 @@ test("lifecycle and transactions paths", async () => {
     "GET /api/v1/transactions/?status=completed&limit=10",
   ]);
 });
+
+test("wallets.list passes query params", async () => {
+  let seen;
+  const client = makeClient((url) => {
+    seen = url;
+    return new Response(JSON.stringify([{ id: "w1" }]), { status: 200 });
+  });
+  const wallets = await client.wallets.list({ isActive: true });
+  assert.equal(seen, "https://api.test/api/v1/wallets/?is_active=true");
+  assert.equal(wallets[0].id, "w1");
+});

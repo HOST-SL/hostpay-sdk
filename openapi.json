@@ -9425,7 +9425,7 @@
     },
     "/api/v1/wallets/": {
       "get": {
-        "description": "Get all wallets for the application if the user is an admin.\n\nArgs:\n    is_active: Optional filter to get only active (true) or inactive (false) wallets.\n               If not provided, returns all wallets.\n    session: Database session\n    current_user: The current authenticated user\n    application_id: Application ID to retrieve schema name\n    live_mode: Whether to use live mode schema\n\nReturns:\n    List[WalletRead]: List of wallet data matching the filter criteria",
+        "description": "Get all wallets for the application (merchant API, mirrors GET /users/).\n\nThe application and live/test mode are derived from the credential, same\nas every other merchant endpoint. Previously this was JWT-admin-only,\nwhich contradicted the public docs and made it unreachable from the SDK.\n\nArgs:\n    is_active: Optional filter to get only active (true) or inactive (false) wallets.\n               If not provided, returns all wallets.\n    session: Database session\n    app_data: Verified application credentials\n\nReturns:\n    List[WalletRead]: List of wallet data matching the filter criteria",
         "operationId": "get_wallets_api_v1_wallets__get",
         "parameters": [
           {
@@ -9434,26 +9434,6 @@
             "required": false,
             "schema": {
               "title": "Is Active",
-              "type": "boolean"
-            }
-          },
-          {
-            "in": "query",
-            "name": "application_id",
-            "required": false,
-            "schema": {
-              "format": "uuid",
-              "title": "Application Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "live_mode",
-            "required": false,
-            "schema": {
-              "default": true,
-              "title": "Live Mode",
               "type": "boolean"
             }
           }
@@ -9486,7 +9466,8 @@
         },
         "security": [
           {
-            "OAuth2PasswordBearer": []
+            "ApiKey": [],
+            "SecretKey": []
           }
         ],
         "summary": "Get Wallets",

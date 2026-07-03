@@ -81,6 +81,10 @@ class Wallets(_Resource):
     def balance(self, wallet_id: str) -> Any:
         return self._t.request("GET", f"/api/v1/wallets/{wallet_id}/balance")
 
+    def list(self, is_active: Optional[bool] = None) -> list[WalletRead]:
+        params = {} if is_active is None else {"is_active": is_active}
+        return self._t.request("GET", "/api/v1/wallets/", params=params)
+
     def disable(self, wallet_id: str) -> Any:
         return self._t.request("POST", f"/api/v1/wallets/{wallet_id}/disable")
 

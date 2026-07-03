@@ -1911,15 +1911,17 @@ export interface paths {
         };
         /**
          * Get Wallets
-         * @description Get all wallets for the application if the user is an admin.
+         * @description Get all wallets for the application (merchant API, mirrors GET /users/).
+         *
+         *     The application and live/test mode are derived from the credential, same
+         *     as every other merchant endpoint. Previously this was JWT-admin-only,
+         *     which contradicted the public docs and made it unreachable from the SDK.
          *
          *     Args:
          *         is_active: Optional filter to get only active (true) or inactive (false) wallets.
          *                    If not provided, returns all wallets.
          *         session: Database session
-         *         current_user: The current authenticated user
-         *         application_id: Application ID to retrieve schema name
-         *         live_mode: Whether to use live mode schema
+         *         app_data: Verified application credentials
          *
          *     Returns:
          *         List[WalletRead]: List of wallet data matching the filter criteria
@@ -7275,8 +7277,6 @@ export interface operations {
         parameters: {
             query?: {
                 is_active?: boolean;
-                application_id?: string;
-                live_mode?: boolean;
             };
             header?: never;
             path?: never;
