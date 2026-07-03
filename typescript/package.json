@@ -29,11 +29,11 @@
   "homepage": "https://hpay.host-sl.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/HOST-SL/host_pay.git",
-    "directory": "sdk/typescript"
+    "url": "git+https://github.com/HOST-SL/hostpay-sdk.git",
+    "directory": "typescript"
   },
   "bugs": {
-    "url": "https://github.com/HOST-SL/host_pay/issues"
+    "url": "https://github.com/HOST-SL/hostpay-sdk/issues"
   },
   "engines": {
     "node": ">=18"
