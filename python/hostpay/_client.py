@@ -8,7 +8,15 @@ import httpx
 
 from ._object import HostPayObject, _wrap
 from .errors import APIConnectionError, error_from_status
-from .resources import Deposits, Escrow, Payouts, Transfers, Users, Wallets
+from .resources import (
+    Deposits,
+    Escrow,
+    Payouts,
+    Transactions,
+    Transfers,
+    Users,
+    Wallets,
+)
 from .webhooks import Webhooks
 
 DEFAULT_BASE_URL = "https://hpay-api.host-sl.com"
@@ -115,6 +123,7 @@ class HostPay:
         self.wallets = Wallets(self._transport)
         self.deposits = Deposits(self._transport)
         self.transfers = Transfers(self._transport)
+        self.transactions = Transactions(self._transport)
         self.payouts = Payouts(self._transport)
         self.escrow = Escrow(self._transport)
         self.webhooks = Webhooks()

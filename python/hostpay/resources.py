@@ -38,6 +38,38 @@ class Users(_Resource):
     def get(self, user_id: str) -> UserRead:
         return self._t.request("GET", f"/api/v1/users/{user_id}/")
 
+    def list(self, is_active: Optional[bool] = None) -> list[UserRead]:
+        params = {} if is_active is None else {"is_active": is_active}
+        return self._t.request("GET", "/api/v1/users/", params=params)
+
+    def update(
+        self,
+        user_id: str,
+        app_user_id: str,
+        name: str,
+        phone_number: str,
+        email: Optional[str] = None,
+        username: Optional[str] = None,
+    ) -> UserRead:
+        """Full update — the API expects the complete user body; app_user_id
+        must match the existing value (it is immutable)."""
+        return self._t.request("PUT", f"/api/v1/users/{user_id}/", json={
+            "app_user_id": app_user_id,
+            "name": name,
+            "phone_number": phone_number,
+            "email": email,
+            "username": username,
+        })
+
+    def delete(self, user_id: str) -> Any:
+        return self._t.request("DELETE", f"/api/v1/users/{user_id}/")
+
+    def disable(self, user_id: str) -> Any:
+        return self._t.request("POST", f"/api/v1/users/{user_id}/disable")
+
+    def enable(self, user_id: str) -> Any:
+        return self._t.request("POST", f"/api/v1/users/{user_id}/enable")
+
 
 class Wallets(_Resource):
     def create(self, user_id: str) -> WalletRead:
@@ -48,6 +80,46 @@ class Wallets(_Resource):
 
     def balance(self, wallet_id: str) -> Any:
         return self._t.request("GET", f"/api/v1/wallets/{wallet_id}/balance")
+
+    def disable(self, wallet_id: str) -> Any:
+        return self._t.request("POST", f"/api/v1/wallets/{wallet_id}/disable")
+
+    def enable(self, wallet_id: str) -> Any:
+        return self._t.request("POST", f"/api/v1/wallets/{wallet_id}/enable")
+
+
+class Transactions(_Resource):
+    def get(self, transaction_id: str) -> TransactionResponse:
+        return self._t.request("GET", f"/api/v1/transactions/{transaction_id}")
+
+    def list(
+        self,
+        status: Optional[str] = None,
+        transaction_type: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        search: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[TransactionResponse]:
+        params = {
+            "status": status,
+            "transaction_type": transaction_type,
+            "start_date": start_date,
+            "end_date": end_date,
+            "search": search,
+            "limit": limit,
+            "offset": offset,
+        }
+        return self._t.request(
+            "GET",
+            "/api/v1/transactions/",
+            params={k: v for k, v in params.items() if v is not None},
+        )
+
+    def for_wallet(self, wallet_id: str) -> list[TransactionResponse]:
+        """All transactions for a wallet, incoming and outgoing."""
+        return self._t.request("GET", f"/api/v1/transactions/wallet/{wallet_id}")
 
 
 class Deposits(_Resource):

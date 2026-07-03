@@ -5,7 +5,7 @@ export interface Transport {
   request(
     method: string,
     path: string,
-    init?: { body?: unknown; idempotencyKey?: string },
+    init?: { body?: unknown; idempotencyKey?: string; query?: Record<string, unknown> },
   ): Promise<any>;
 }
 
@@ -42,6 +42,47 @@ export class Users extends Resource {
   get(userId: string): Promise<User> {
     return this.t.request("GET", `/api/v1/users/${userId}/`);
   }
+
+  list(params: { isActive?: boolean } = {}): Promise<User[]> {
+    return this.t.request("GET", "/api/v1/users/", {
+      query: { is_active: params.isActive },
+    });
+  }
+
+  /** Full update — the API expects the complete user body; appUserId must
+   * match the existing value (it is immutable). */
+  update(
+    userId: string,
+    params: {
+      appUserId: string;
+      name: string;
+      phoneNumber: string;
+      email?: string;
+      username?: string;
+    },
+  ): Promise<User> {
+    return this.t.request("PUT", `/api/v1/users/${userId}/`, {
+      body: {
+        app_user_id: params.appUserId,
+        name: params.name,
+        phone_number: params.phoneNumber,
+        email: params.email,
+        username: params.username,
+      },
+    });
+  }
+
+  delete(userId: string): Promise<any> {
+    return this.t.request("DELETE", `/api/v1/users/${userId}/`);
+  }
+
+  disable(userId: string): Promise<any> {
+    return this.t.request("POST", `/api/v1/users/${userId}/disable`);
+  }
+
+  enable(userId: string): Promise<any> {
+    return this.t.request("POST", `/api/v1/users/${userId}/enable`);
+  }
 }
 
 export class Wallets extends Resource {
@@ -55,6 +96,49 @@ export class Wallets extends Resource {
 
   balance(walletId: string): Promise<HostPayObject> {
     return this.t.request("GET", `/api/v1/wallets/${walletId}/balance`);
+  }
+
+  disable(walletId: string): Promise<any> {
+    return this.t.request("POST", `/api/v1/wallets/${walletId}/disable`);
+  }
+
+  enable(walletId: string): Promise<any> {
+    return this.t.request("POST", `/api/v1/wallets/${walletId}/enable`);
+  }
+}
+
+export class Transactions extends Resource {
+  get(transactionId: string): Promise<Transaction> {
+    return this.t.request("GET", `/api/v1/transactions/${transactionId}`);
+  }
+
+  list(
+    params: {
+      status?: string;
+      transactionType?: string;
+      startDate?: string;
+      endDate?: string;
+      search?: string;
+      limit?: number;
+      offset?: number;
+    } = {},
+  ): Promise<Transaction[]> {
+    return this.t.request("GET", "/api/v1/transactions/", {
+      query: {
+        status: params.status,
+        transaction_type: params.transactionType,
+        start_date: params.startDate,
+        end_date: params.endDate,
+        search: params.search,
+        limit: params.limit,
+        offset: params.offset,
+      },
+    });
+  }
+
+  /** All transactions for a wallet, incoming and outgoing. */
+  forWallet(walletId: string): Promise<Transaction[]> {
+    return this.t.request("GET", `/api/v1/transactions/wallet/${walletId}`);
   }
 }
 

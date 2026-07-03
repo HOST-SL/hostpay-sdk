@@ -1,7 +1,7 @@
 # HostPay Python SDK
 
 A small, typed client for the [HostPay](https://hpay.host-sl.com) payments API —
-wallets, deposits, transfers, payouts, escrow, and webhook verification.
+wallets, deposits, transfers, payouts, escrow, transaction queries, user/wallet lifecycle management, and webhook verification.
 
 ## Install
 

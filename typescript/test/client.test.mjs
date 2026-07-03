@@ -62,3 +62,57 @@ test("422 maps to InvalidRequestError", async () => {
     InvalidRequestError,
   );
 });
+
+test("users.list passes query params", async () => {
+  let seen;
+  const client = makeClient((url) => {
+    seen = url;
+    return new Response(JSON.stringify([{ id: "usr_1" }]), { status: 200 });
+  });
+  const users = await client.users.list({ isActive: true });
+  assert.equal(seen, "https://api.test/api/v1/users/?is_active=true");
+  assert.equal(users[0].id, "usr_1");
+});
+
+test("users.update sends PUT with full body", async () => {
+  let seen;
+  const client = makeClient((url, init) => {
+    seen = { url, method: init.method, body: JSON.parse(init.body) };
+    return new Response(JSON.stringify({ id: "usr_1" }), { status: 200 });
+  });
+  await client.users.update("usr_1", {
+    appUserId: "u1",
+    name: "New Name",
+    phoneNumber: "+232",
+  });
+  assert.equal(seen.url, "https://api.test/api/v1/users/usr_1/");
+  assert.equal(seen.method, "PUT");
+  assert.equal(seen.body.name, "New Name");
+});
+
+test("lifecycle and transactions paths", async () => {
+  const calls = [];
+  const client = makeClient((url, init) => {
+    calls.push(`${init.method} ${url.replace("https://api.test", "")}`);
+    return new Response("{}", { status: 200 });
+  });
+  await client.users.delete("u1");
+  await client.users.disable("u1");
+  await client.users.enable("u1");
+  await client.wallets.disable("w1");
+  await client.wallets.enable("w1");
+  await client.transactions.get("t1");
+  await client.transactions.forWallet("w1");
+  await client.transactions.list({ status: "completed", limit: 10 });
+
+  assert.deepEqual(calls, [
+    "DELETE /api/v1/users/u1/",
+    "POST /api/v1/users/u1/disable",
+    "POST /api/v1/users/u1/enable",
+    "POST /api/v1/wallets/w1/disable",
+    "POST /api/v1/wallets/w1/enable",
+    "GET /api/v1/transactions/t1",
+    "GET /api/v1/transactions/wallet/w1",
+    "GET /api/v1/transactions/?status=completed&limit=10",
+  ]);
+});

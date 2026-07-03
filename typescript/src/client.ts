@@ -3,6 +3,7 @@ import {
   Deposits,
   Escrow,
   Payouts,
+  Transactions,
   Transfers,
   Users,
   Wallets,
@@ -48,8 +49,16 @@ class HttpTransport implements Transport {
   async request(
     method: string,
     path: string,
-    init: { body?: unknown; idempotencyKey?: string } = {},
+    init: { body?: unknown; idempotencyKey?: string; query?: Record<string, unknown> } = {},
   ): Promise<any> {
+    if (init.query) {
+      const qs = new URLSearchParams();
+      for (const [k, v] of Object.entries(init.query)) {
+        if (v !== undefined && v !== null) qs.set(k, String(v));
+      }
+      const q = qs.toString();
+      if (q) path += (path.includes("?") ? "&" : "?") + q;
+    }
     const headers: Record<string, string> = {
       ...this.auth,
       "Content-Type": "application/json",
@@ -114,6 +123,7 @@ export class HostPay {
   readonly wallets: Wallets;
   readonly deposits: Deposits;
   readonly transfers: Transfers;
+  readonly transactions: Transactions;
   readonly payouts: Payouts;
   readonly escrow: Escrow;
   readonly webhooks: Webhooks;
@@ -127,6 +137,7 @@ export class HostPay {
     this.wallets = new Wallets(t);
     this.deposits = new Deposits(t);
     this.transfers = new Transfers(t);
+    this.transactions = new Transactions(t);
     this.payouts = new Payouts(t);
     this.escrow = new Escrow(t);
     this.webhooks = new Webhooks();
