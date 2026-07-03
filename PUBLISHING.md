@@ -32,11 +32,26 @@ On PyPI → your project → *Publishing*, add a **pending trusted publisher**:
 Then in GitHub → *Settings → Environments*, create an environment named
 **`pypi`** (optionally add required reviewers to gate releases).
 
-### 2. npm — automation token
+### 2. npm — Trusted Publishing (no token)
 
-1. npm → *Access Tokens* → **Generate → Automation** token.
-2. GitHub → *Settings → Secrets and variables → Actions* → add secret
-   **`NPM_TOKEN`**.
+npm now steers CI/CD to Trusted Publishing (OIDC) instead of automation tokens —
+same tokenless model as PyPI, so there's no secret to store and 2FA isn't in the
+way.
+
+1. Create the **`@hostpay`** org (https://www.npmjs.com/org/create) if you
+   haven't.
+2. **First publish bootstraps the package** — npm only lets you configure a
+   trusted publisher on a package that already exists, so publish `0.1.0` once
+   manually (interactive 2FA is fine here — you're at a terminal):
+   ```bash
+   cd typescript && npm run build && npm login && npm publish
+   ```
+3. On npm → the `@hostpay/sdk` package → *Settings → Trusted Publisher* → add
+   **GitHub Actions**:
+   - Organization/owner: `HOST-SL` · Repository: `hostpay-sdk`
+   - Workflow filename: `publish-npm.yml`
+
+   Every release after that publishes automatically via the tag — no token.
 
 ## Cutting a release
 

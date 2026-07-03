@@ -1,8 +1,9 @@
 name: Publish TypeScript SDK
 
 # Publishes typescript/ to npm when a tag like `ts-v0.1.0` is pushed.
-# Requires an NPM_TOKEN repo secret and the @hostpay org (see PUBLISHING.md).
-# Publishes with provenance.
+# Uses npm Trusted Publishing (OIDC) — no token/secret. Configure a trusted
+# publisher for @hostpay/sdk on npm first (see PUBLISHING.md). Publishes with
+# provenance.
 
 on:
   push:
@@ -14,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
+      id-token: write # required for trusted publishing + provenance
     defaults:
       run:
         working-directory: typescript
@@ -25,6 +26,9 @@ jobs:
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
+
+      # Trusted publishing requires npm >= 11.5.1 (Node 20 ships npm 10).
+      - run: npm install -g npm@latest
 
       - name: Verify version matches tag
         if: startsWith(github.ref, 'refs/tags/')
@@ -37,7 +41,6 @@ jobs:
       - run: npm ci
       - run: npm test
 
+      # No NODE_AUTH_TOKEN: npm authenticates via GitHub OIDC (trusted publishing).
       - name: Publish to npm
         run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
