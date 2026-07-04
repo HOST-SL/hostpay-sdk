@@ -21,68 +21,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/applications/{app_id}/platform-fee": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Platform Fee
-         * @description Super-admin only: update the platform fee percentage and/or key management style for an application.
-         *     If the key management style is updated to 'client_managed', ensure the platform prepaid wallets exist.
-         */
-        put: operations["update_platform_fee_api_v1_admin_applications__app_id__platform_fee_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/create": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Admin
-         * @description Create a new admin (non-super admin).
-         *     Only super admins can perform this operation.
-         */
-        post: operations["create_admin_api_v1_admin_create_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/create-super-admin/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Super Admin
-         * @description Create a super admin. Requires the BOOTSTRAP_SECRET header for authorization.
-         */
-        post: operations["create_super_admin_api_v1_admin_create_super_admin__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/admin/login": {
         parameters: {
             query?: never;
@@ -268,33 +206,6 @@ export interface paths {
          * @description Revoke one of the current admin's sessions (sign that device out).
          */
         post: operations["revoke_my_session_api_v1_admin_me_sessions__session_id__revoke_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/platform/monime-webhook/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Register Platform Monime Webhook
-         * @description Super-admin only: One-time registration of the platform-wide Monime webhook.
-         *
-         *     This registers a SINGLE webhook URL with Monime using the platform master keys.
-         *     After this, all platform-managed apps receive webhook callbacks automatically
-         *     without any per-app webhook setup.
-         *
-         *     Query params:
-         *         environment: "live" or "test" (default: "test")
-         */
-        post: operations["register_platform_monime_webhook_api_v1_admin_platform_monime_webhook_register_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1092,106 +1003,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/merchants": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Merchants
-         * @description List all client (merchant) accounts.
-         */
-        get: operations["list_merchants_api_v1_platform_merchants_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/merchants/{admin_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Merchant
-         * @description Get a single merchant with their applications.
-         */
-        get: operations["get_merchant_api_v1_platform_merchants__admin_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/merchants/{admin_id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Approve Merchant
-         * @description Approve a merchant for live mode.
-         */
-        post: operations["approve_merchant_api_v1_platform_merchants__admin_id__approve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/merchants/{admin_id}/reactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reactivate Merchant
-         * @description Re-enable a previously suspended merchant.
-         */
-        post: operations["reactivate_merchant_api_v1_platform_merchants__admin_id__reactivate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/merchants/{admin_id}/suspend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Suspend Merchant
-         * @description Suspend a merchant (kill-switch) — disables account access.
-         */
-        post: operations["suspend_merchant_api_v1_platform_merchants__admin_id__suspend_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/testing/simulate-monime-webhook": {
         parameters: {
             query?: never;
@@ -1458,8 +1269,10 @@ export interface paths {
         put?: never;
         /**
          * Sync Transaction
-         * @description Manually trigger a reconciliation sync for a transaction by its reference ID.
-         *     This is useful for the frontend to call immediately after a payment is completed.
+         * @description Manually trigger a reconciliation sync for one of your transactions by its
+         *     provider reference id — useful to call from your backend right after a
+         *     payment completes. Scoped to the calling application and the key's mode
+         *     (test/live); it will not touch other merchants' data.
          */
         post: operations["sync_transaction_api_v1_transactions_sync__reference_id__post"];
         delete?: never;
@@ -2401,31 +2214,6 @@ export interface components {
             title: string;
             /** Type */
             type: string;
-        };
-        /** AdminCreate */
-        AdminCreate: {
-            /**
-             * Email
-             * Format: email
-             * @example admin@example.com
-             */
-            email: string;
-            /**
-             * Name
-             * @example John Doe
-             */
-            name: string;
-            /**
-             * Password
-             * @example securepassword
-             */
-            password: string;
-            /**
-             * Super Admin
-             * @default false
-             * @example true
-             */
-            super_admin: boolean;
         };
         /** AdminRead */
         AdminRead: {
@@ -3422,38 +3210,6 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
-        /** MerchantDetail */
-        MerchantDetail: {
-            /** Application Count */
-            application_count: number;
-            /**
-             * Applications
-             * @default []
-             */
-            applications: components["schemas"]["PlatformApplicationSummary"][];
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Email Verified */
-            email_verified: boolean;
-            /** Id */
-            id: number;
-            /** Is Active */
-            is_active: boolean;
-            /** Last Login */
-            last_login?: string | null;
-            /** Live Approved */
-            live_approved: boolean;
-            /** Name */
-            name: string;
-        };
         /** MerchantRegister */
         MerchantRegister: {
             /**
@@ -3472,36 +3228,6 @@ export interface components {
              * @example securepassword
              */
             password: string;
-        };
-        /**
-         * MerchantSummary
-         * @description A client (merchant) account as seen by a platform super-admin.
-         */
-        MerchantSummary: {
-            /** Application Count */
-            application_count: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Email Verified */
-            email_verified: boolean;
-            /** Id */
-            id: number;
-            /** Is Active */
-            is_active: boolean;
-            /** Last Login */
-            last_login?: string | null;
-            /** Live Approved */
-            live_approved: boolean;
-            /** Name */
-            name: string;
         };
         /** MessageResponse */
         MessageResponse: {
@@ -3670,48 +3396,6 @@ export interface components {
          * @enum {string}
          */
         PayoutProvider: "m17" | "m18";
-        /** PlatformApplicationSummary */
-        PlatformApplicationSummary: {
-            /** Application Name */
-            application_name: string;
-            /** Application Type */
-            application_type: string;
-            /** Base Currency */
-            base_currency: string;
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Is Active */
-            is_active: boolean;
-            /** Key Management Style */
-            key_management_style: string;
-        };
-        /**
-         * PlatformFeeUpdate
-         * @description Super-admin only: update the platform fee percentage for a specific application.
-         *     Optionally also change the key management style.
-         */
-        PlatformFeeUpdate: {
-            /**
-             * Key Management Style
-             * @description 'client_managed' (BYOK) or 'platform_managed' (HOST Pay keys)
-             */
-            key_management_style?: ("client_managed" | "platform_managed") | null;
-            /**
-             * Platform Fee Percentage
-             * @description Platform fee % of gross transaction amount
-             * @example 1.5
-             */
-            platform_fee_percentage?: number | string | null;
-            /**
-             * Prepaid Overdraft Limit
-             * @description Overdraft limit for prepaid wallet
-             * @example -50
-             */
-            prepaid_overdraft_limit?: number | string | null;
-        };
         /** PrepaidDepositRequest */
         PrepaidDepositRequest: {
             /**
@@ -4459,109 +4143,6 @@ export interface operations {
             };
         };
     };
-    update_platform_fee_api_v1_admin_applications__app_id__platform_fee_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                app_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlatformFeeUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApplicationRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_admin_api_v1_admin_create_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AdminCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdminRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_super_admin_api_v1_admin_create_super_admin__post: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-Bootstrap-Secret": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AdminCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdminRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     login_user_api_v1_admin_login_post: {
         parameters: {
             query?: never;
@@ -4821,37 +4402,6 @@ export interface operations {
             path: {
                 session_id: string;
             };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    register_platform_monime_webhook_api_v1_admin_platform_monime_webhook_register_post: {
-        parameters: {
-            query?: {
-                environment?: string;
-            };
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -6074,150 +5624,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
-                };
-            };
-        };
-    };
-    list_merchants_api_v1_platform_merchants_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MerchantSummary"][];
-                };
-            };
-        };
-    };
-    get_merchant_api_v1_platform_merchants__admin_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                admin_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MerchantDetail"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    approve_merchant_api_v1_platform_merchants__admin_id__approve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                admin_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MerchantSummary"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reactivate_merchant_api_v1_platform_merchants__admin_id__reactivate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                admin_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MerchantSummary"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    suspend_merchant_api_v1_platform_merchants__admin_id__suspend_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                admin_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MerchantSummary"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
