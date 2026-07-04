@@ -14,11 +14,14 @@ from .errors import APIConnectionError, error_from_status
 from .resources import (
     Deposits,
     Escrow,
+    Fees,
     Payouts,
+    Testing,
     Transactions,
     Transfers,
     Users,
     Wallets,
+    WebhookSubscriptions,
 )
 from .webhooks import Webhooks
 
@@ -43,6 +46,7 @@ class _Transport:
         timeout: float,
         max_retries: int,
         http_client: Optional[httpx.Client],
+        app_info: Optional[str] = None,
     ) -> None:
         self._max_retries = max_retries
         # Auth is applied per-request so a caller-supplied http_client is still
@@ -50,7 +54,8 @@ class _Transport:
         self._auth = {
             "api-key": api_key,
             "secret-key": secret_key,
-            "User-Agent": f"hostpay-python/{_VERSION}",
+            "User-Agent": f"hostpay-python/{_VERSION}"
+            + (f" {app_info}" if app_info else ""),
         }
         self._client = http_client or httpx.Client(
             base_url=base_url.rstrip("/"), timeout=timeout
@@ -123,11 +128,12 @@ class HostPay:
         timeout: float = 30.0,
         max_retries: int = 2,
         http_client: Optional[httpx.Client] = None,
+        app_info: Optional[str] = None,
     ) -> None:
         if not api_key or not secret_key:
             raise ValueError("api_key and secret_key are required")
         self._transport = _Transport(
-            api_key, secret_key, base_url, timeout, max_retries, http_client
+            api_key, secret_key, base_url, timeout, max_retries, http_client, app_info
         )
         self.users = Users(self._transport)
         self.wallets = Wallets(self._transport)
@@ -136,7 +142,9 @@ class HostPay:
         self.transactions = Transactions(self._transport)
         self.payouts = Payouts(self._transport)
         self.escrow = Escrow(self._transport)
-        self.webhooks = Webhooks()
+        self.fees = Fees(self._transport)
+        self.testing = Testing(self._transport)
+        self.webhooks = Webhooks(subscriptions=WebhookSubscriptions(self._transport))
 
     def close(self) -> None:
         self._transport.close()
@@ -159,6 +167,7 @@ class _AsyncTransport:
         timeout: float,
         max_retries: int,
         http_client: Optional[httpx.AsyncClient],
+        app_info: Optional[str] = None,
     ) -> None:
         self._max_retries = max_retries
         # Auth is applied per-request so a caller-supplied http_client is still
@@ -166,7 +175,8 @@ class _AsyncTransport:
         self._auth = {
             "api-key": api_key,
             "secret-key": secret_key,
-            "User-Agent": f"hostpay-python/{_VERSION}",
+            "User-Agent": f"hostpay-python/{_VERSION}"
+            + (f" {app_info}" if app_info else ""),
         }
         self._client = http_client or httpx.AsyncClient(
             base_url=base_url.rstrip("/"), timeout=timeout
@@ -224,11 +234,12 @@ class AsyncHostPay:
         timeout: float = 30.0,
         max_retries: int = 2,
         http_client: Optional[httpx.AsyncClient] = None,
+        app_info: Optional[str] = None,
     ) -> None:
         if not api_key or not secret_key:
             raise ValueError("api_key and secret_key are required")
         self._transport = _AsyncTransport(
-            api_key, secret_key, base_url, timeout, max_retries, http_client
+            api_key, secret_key, base_url, timeout, max_retries, http_client, app_info
         )
         self.users = _async_resources.Users(self._transport)
         self.wallets = _async_resources.Wallets(self._transport)
@@ -237,8 +248,12 @@ class AsyncHostPay:
         self.transactions = _async_resources.Transactions(self._transport)
         self.payouts = _async_resources.Payouts(self._transport)
         self.escrow = _async_resources.Escrow(self._transport)
+        self.fees = _async_resources.Fees(self._transport)
+        self.testing = _async_resources.Testing(self._transport)
         # Webhook verification is pure crypto (no I/O) — shared with the sync client.
-        self.webhooks = Webhooks()
+        self.webhooks = Webhooks(
+            subscriptions=_async_resources.WebhookSubscriptions(self._transport)
+        )
 
     async def aclose(self) -> None:
         await self._transport.close()

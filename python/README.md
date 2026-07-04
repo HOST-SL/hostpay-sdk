@@ -79,6 +79,16 @@ client.payouts.mobile_money(
 )
 ```
 
+## Fees, subscriptions, sync & test helpers
+
+- `client.fees` — `summary()`, `configuration()`, `estimate_deposit()`, `estimate_withdrawal()`, `estimate_transfer()`, `estimate_card_metadata()`
+- `client.webhooks.subscriptions` — `create()`, `list()`, `update()`, `delete()`, `rotate_secret()`; the create/rotate response includes the signing secret **once**
+- `client.transactions.sync(reference_id)` — instant post-payment reconciliation
+- `client.testing.simulate_monime_webhook(transaction_id, status=...)` — complete or fail a pending Test Mode deposit (test keys only)
+- `HostPay(..., app_info="YourApp/1.0")` — identify your platform; appended to the User-Agent
+
+All of these exist on `AsyncHostPay` too.
+
 ## Verifying webhooks
 
 Pass the **raw** request body and headers straight from your web framework:

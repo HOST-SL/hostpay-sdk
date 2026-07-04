@@ -23,6 +23,11 @@ _TS_HEADER = "x-webhook-timestamp"
 
 
 class Webhooks:
+    def __init__(self, subscriptions: Any = None) -> None:
+        # Subscription CRUD (client.webhooks.subscriptions.*) — injected by the
+        # client so this module stays transport-free for bare construct_event use.
+        self.subscriptions = subscriptions
+
     @staticmethod
     def construct_event(
         payload: Union[str, bytes],

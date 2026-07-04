@@ -125,6 +125,12 @@ class Transactions(_Resource):
         """All transactions for a wallet, incoming and outgoing."""
         return await self._t.request("GET", f"/api/v1/transactions/wallet/{wallet_id}")
 
+    async def sync(self, reference_id: str) -> Any:
+        """Trigger an immediate reconciliation sync for one of your
+        transactions by its provider reference id — useful right after a
+        payment completes."""
+        return await self._t.request("POST", f"/api/v1/transactions/sync/{reference_id}")
+
 
 class Deposits(_Resource):
     async def mobile_money(
@@ -266,4 +272,116 @@ class Escrow(_Resource):
             f"/api/v1/escrow/{transaction_id}/refund",
             json={"amount": amount},
             idempotency_key=idempotency_key,
+        )
+
+
+class Fees(_Resource):
+    async def summary(self) -> Any:
+        return await self._t.request("GET", "/api/v1/fees/summary")
+
+    async def configuration(self) -> Any:
+        return await self._t.request("GET", "/api/v1/fees/configuration")
+
+    async def estimate_deposit(
+        self, amount: float, payment_method: str, is_international: bool = False
+    ) -> Any:
+        """payment_method: 'mobile_money' | 'card' | 'bank' | 'wallet'."""
+        return await self._t.request("POST", "/api/v1/fees/estimate/deposit", json={
+            "amount": amount,
+            "payment_method": payment_method,
+            "is_international": is_international,
+        })
+
+    async def estimate_withdrawal(self, amount: float, payment_method: str) -> Any:
+        return await self._t.request("POST", "/api/v1/fees/estimate/withdrawal", json={
+            "amount": amount,
+            "payment_method": payment_method,
+        })
+
+    async def estimate_transfer(self, amount: float) -> Any:
+        return await self._t.request("POST", "/api/v1/fees/estimate/transfer", json={
+            "amount": amount,
+        })
+
+    async def estimate_card_metadata(self, payment_method_id: str, amount: float) -> Any:
+        """Card-aware deposit estimate using the actual card's country/brand."""
+        return await self._t.request(
+            "POST", "/api/v1/fees/estimate/deposit/card-metadata", json={
+                "payment_method_id": payment_method_id,
+                "amount": amount,
+            }
+        )
+
+
+class Testing(_Resource):
+    async def simulate_monime_webhook(
+        self, transaction_id: str, status: str = "successful"
+    ) -> Any:
+        """Complete or fail a pending Test Mode mobile-money deposit.
+        Test keys only — the API rejects this in Live Mode. status:
+        'successful' | 'failed'."""
+        return await self._t.request(
+            "POST", "/api/v1/testing/simulate-monime-webhook", json={
+                "transaction_id": transaction_id,
+                "status": status,
+            }
+        )
+
+
+class WebhookSubscriptions(_Resource):
+    async def create(
+        self,
+        target_url: str,
+        events: list[str],
+        description: Optional[str] = None,
+        ip_allowlist: Optional[list[str]] = None,
+        payload_version: Optional[str] = None,
+    ) -> Any:
+        """Create a subscription. The response includes the signing secret
+        ONCE — store it; it cannot be retrieved again (only rotated)."""
+        body: dict = {"target_url": target_url, "events": list(events)}
+        if description is not None:
+            body["description"] = description
+        if ip_allowlist is not None:
+            body["ip_allowlist"] = list(ip_allowlist)
+        if payload_version is not None:
+            body["payload_version"] = payload_version
+        return await self._t.request("POST", "/api/v1/webhooks/subscriptions", json=body)
+
+    async def list(self) -> Any:
+        return await self._t.request("GET", "/api/v1/webhooks/subscriptions")
+
+    async def update(
+        self,
+        subscription_id: str,
+        target_url: Optional[str] = None,
+        events: Optional[list[str]] = None,
+        active: Optional[bool] = None,
+        ip_allowlist: Optional[list[str]] = None,
+        payload_version: Optional[str] = None,
+    ) -> Any:
+        body = {
+            k: v
+            for k, v in {
+                "target_url": target_url,
+                "events": events,
+                "active": active,
+                "ip_allowlist": ip_allowlist,
+                "payload_version": payload_version,
+            }.items()
+            if v is not None
+        }
+        return await self._t.request(
+            "PATCH", f"/api/v1/webhooks/subscriptions/{subscription_id}", json=body
+        )
+
+    async def delete(self, subscription_id: str) -> Any:
+        return await self._t.request(
+            "DELETE", f"/api/v1/webhooks/subscriptions/{subscription_id}"
+        )
+
+    async def rotate_secret(self, subscription_id: str) -> Any:
+        """Returns the new signing secret once."""
+        return await self._t.request(
+            "POST", f"/api/v1/webhooks/subscriptions/{subscription_id}/rotate-secret"
         )

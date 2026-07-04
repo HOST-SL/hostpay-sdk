@@ -27,6 +27,14 @@ function getHeader(headers: HeaderBag, name: string): string | undefined {
 }
 
 export class Webhooks {
+  /** Subscription CRUD (client.webhooks.subscriptions.*) — injected by the
+   * client so this module stays transport-free for bare constructEvent use. */
+  readonly subscriptions: any;
+
+  constructor(subscriptions?: any) {
+    this.subscriptions = subscriptions;
+  }
+
   /**
    * Verify the signature and return the parsed event. Throws
    * SignatureVerificationError on any mismatch, or if the timestamp is older

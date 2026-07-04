@@ -142,6 +142,14 @@ export class Transactions extends Resource {
     });
   }
 
+  /**
+   * Trigger an immediate reconciliation sync for one of your transactions by
+   * its provider reference id — useful right after a payment completes.
+   */
+  sync(referenceId: string): Promise<any> {
+    return this.t.request("POST", `/api/v1/transactions/sync/${referenceId}`);
+  }
+
   /** All transactions for a wallet, incoming and outgoing. */
   forWallet(walletId: string): Promise<Transaction[]> {
     return this.t.request("GET", `/api/v1/transactions/wallet/${walletId}`);
@@ -287,5 +295,122 @@ export class Escrow extends Resource {
       body: { amount: params.amount },
       idempotencyKey: params.idempotencyKey,
     });
+  }
+}
+
+export class Fees extends Resource {
+  summary(): Promise<any> {
+    return this.t.request("GET", "/api/v1/fees/summary");
+  }
+
+  configuration(): Promise<any> {
+    return this.t.request("GET", "/api/v1/fees/configuration");
+  }
+
+  /** paymentMethod: "mobile_money" | "card" | "bank" | "wallet". */
+  estimateDeposit(params: {
+    amount: number;
+    paymentMethod: string;
+    isInternational?: boolean;
+  }): Promise<any> {
+    return this.t.request("POST", "/api/v1/fees/estimate/deposit", {
+      body: {
+        amount: params.amount,
+        payment_method: params.paymentMethod,
+        is_international: params.isInternational ?? false,
+      },
+    });
+  }
+
+  estimateWithdrawal(params: { amount: number; paymentMethod: string }): Promise<any> {
+    return this.t.request("POST", "/api/v1/fees/estimate/withdrawal", {
+      body: { amount: params.amount, payment_method: params.paymentMethod },
+    });
+  }
+
+  estimateTransfer(params: { amount: number }): Promise<any> {
+    return this.t.request("POST", "/api/v1/fees/estimate/transfer", {
+      body: { amount: params.amount },
+    });
+  }
+
+  /** Card-aware deposit estimate using the actual card's country/brand. */
+  estimateCardMetadata(params: { paymentMethodId: string; amount: number }): Promise<any> {
+    return this.t.request("POST", "/api/v1/fees/estimate/deposit/card-metadata", {
+      body: { payment_method_id: params.paymentMethodId, amount: params.amount },
+    });
+  }
+}
+
+export class Testing extends Resource {
+  /**
+   * Complete or fail a pending Test Mode mobile-money deposit. Test keys
+   * only — the API rejects this in Live Mode.
+   */
+  simulateMonimeWebhook(params: {
+    transactionId: string;
+    status?: "successful" | "failed";
+  }): Promise<any> {
+    return this.t.request("POST", "/api/v1/testing/simulate-monime-webhook", {
+      body: {
+        transaction_id: params.transactionId,
+        status: params.status ?? "successful",
+      },
+    });
+  }
+}
+
+export class WebhookSubscriptions extends Resource {
+  /**
+   * Create a subscription. The response includes the signing secret ONCE —
+   * store it; it cannot be retrieved again (only rotated).
+   */
+  create(params: {
+    targetUrl: string;
+    events: string[];
+    description?: string;
+    ipAllowlist?: string[];
+    payloadVersion?: string;
+  }): Promise<any> {
+    const body: Record<string, unknown> = {
+      target_url: params.targetUrl,
+      events: params.events,
+    };
+    if (params.description !== undefined) body.description = params.description;
+    if (params.ipAllowlist !== undefined) body.ip_allowlist = params.ipAllowlist;
+    if (params.payloadVersion !== undefined) body.payload_version = params.payloadVersion;
+    return this.t.request("POST", "/api/v1/webhooks/subscriptions", { body });
+  }
+
+  list(): Promise<any> {
+    return this.t.request("GET", "/api/v1/webhooks/subscriptions");
+  }
+
+  update(
+    subscriptionId: string,
+    params: {
+      targetUrl?: string;
+      events?: string[];
+      active?: boolean;
+      ipAllowlist?: string[];
+      payloadVersion?: string;
+    },
+  ): Promise<any> {
+    const body: Record<string, unknown> = {};
+    if (params.targetUrl !== undefined) body.target_url = params.targetUrl;
+    if (params.events !== undefined) body.events = params.events;
+    if (params.active !== undefined) body.active = params.active;
+    if (params.ipAllowlist !== undefined) body.ip_allowlist = params.ipAllowlist;
+    if (params.payloadVersion !== undefined) body.payload_version = params.payloadVersion;
+    return this.t.request("PATCH", `/api/v1/webhooks/subscriptions/${subscriptionId}`, { body });
+  }
+
+  delete(subscriptionId: string): Promise<void> {
+    return this.t.request("DELETE", `/api/v1/webhooks/subscriptions/${subscriptionId}`);
+  }
+
+  /** Returns the new signing secret once. */
+  rotateSecret(subscriptionId: string): Promise<any> {
+    return this.t.request("POST", `/api/v1/webhooks/subscriptions/${subscriptionId}/rotate-secret`);
   }
 }

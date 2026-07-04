@@ -159,3 +159,100 @@ def test_escrow_methods_forward_idempotency_key():
         ("/api/v1/escrow/esc_1/release", "rel-1"),
         ("/api/v1/escrow/esc_1/refund", "ref-1"),
     ]
+
+
+def test_fees_resource_paths_and_bodies():
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content) if request.content else None
+        calls.append((request.method, request.url.path, body))
+        return httpx.Response(200, json={})
+
+    client = _client(handler)
+    client.fees.summary()
+    client.fees.configuration()
+    client.fees.estimate_deposit(amount=100, payment_method="card", is_international=True)
+    client.fees.estimate_withdrawal(amount=50, payment_method="mobile_money")
+    client.fees.estimate_transfer(amount=25)
+    client.fees.estimate_card_metadata(payment_method_id="pm_1", amount=75)
+
+    assert calls == [
+        ("GET", "/api/v1/fees/summary", None),
+        ("GET", "/api/v1/fees/configuration", None),
+        ("POST", "/api/v1/fees/estimate/deposit",
+         {"amount": 100, "payment_method": "card", "is_international": True}),
+        ("POST", "/api/v1/fees/estimate/withdrawal",
+         {"amount": 50, "payment_method": "mobile_money"}),
+        ("POST", "/api/v1/fees/estimate/transfer", {"amount": 25}),
+        ("POST", "/api/v1/fees/estimate/deposit/card-metadata",
+         {"payment_method_id": "pm_1", "amount": 75}),
+    ]
+
+
+def test_transactions_sync_and_testing_simulator():
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content) if request.content else None
+        calls.append((request.method, request.url.path, body))
+        return httpx.Response(200, json={})
+
+    client = _client(handler)
+    client.transactions.sync("mnm_ref_123")
+    client.testing.simulate_monime_webhook("txn_1")  # default: successful
+    client.testing.simulate_monime_webhook("txn_2", status="failed")
+
+    assert calls == [
+        ("POST", "/api/v1/transactions/sync/mnm_ref_123", None),
+        ("POST", "/api/v1/testing/simulate-monime-webhook",
+         {"transaction_id": "txn_1", "status": "successful"}),
+        ("POST", "/api/v1/testing/simulate-monime-webhook",
+         {"transaction_id": "txn_2", "status": "failed"}),
+    ]
+
+
+def test_webhook_subscriptions_crud():
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content) if request.content else None
+        calls.append((request.method, request.url.path, body))
+        return httpx.Response(200, json={})
+
+    client = _client(handler)
+    subs = client.webhooks.subscriptions
+    subs.create(target_url="https://f.example/hook", events=["payout.failed"])
+    subs.list()
+    subs.update("sub_1", active=False)  # only provided fields go on the wire
+    subs.rotate_secret("sub_1")
+    subs.delete("sub_1")
+
+    assert calls == [
+        ("POST", "/api/v1/webhooks/subscriptions",
+         {"target_url": "https://f.example/hook", "events": ["payout.failed"]}),
+        ("GET", "/api/v1/webhooks/subscriptions", None),
+        ("PATCH", "/api/v1/webhooks/subscriptions/sub_1", {"active": False}),
+        ("POST", "/api/v1/webhooks/subscriptions/sub_1/rotate-secret", None),
+        ("DELETE", "/api/v1/webhooks/subscriptions/sub_1", None),
+    ]
+    # construct_event stays available on the same namespace.
+    assert callable(client.webhooks.construct_event)
+
+
+def test_app_info_appended_to_user_agent():
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["ua"] = request.headers["User-Agent"]
+        return httpx.Response(200, json={})
+
+    mock = httpx.MockTransport(handler)
+    http = httpx.Client(base_url="https://api.test", transport=mock)
+    client = HostPay(
+        api_key="ak-x", secret_key="sk-y", http_client=http,
+        app_info="Fataba-Platform/1.0",
+    )
+    client.fees.summary()
+    assert seen["ua"].startswith("hostpay-python/")
+    assert seen["ua"].endswith(" Fataba-Platform/1.0")

@@ -59,6 +59,14 @@ await client.payouts.mobileMoney({
 });
 ```
 
+## Fees, subscriptions, sync & test helpers
+
+- `client.fees` — `summary()`, `configuration()`, `estimateDeposit()`, `estimateWithdrawal()`, `estimateTransfer()`, `estimateCardMetadata()`
+- `client.webhooks.subscriptions` — `create()`, `list()`, `update()`, `delete()`, `rotateSecret()`; the create/rotate response includes the signing secret **once**
+- `client.transactions.sync(referenceId)` — instant post-payment reconciliation
+- `client.testing.simulateMonimeWebhook(...)` — complete or fail a pending Test Mode deposit (test keys only)
+- `new HostPay({ ..., appInfo: "YourApp/1.0" })` — identify your platform; appended to the User-Agent
+
 ## Verifying webhooks
 
 Pass the **raw** request body and headers straight from your server:

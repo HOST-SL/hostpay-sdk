@@ -2,11 +2,14 @@ import { APIConnectionError, errorFromStatus } from "./errors.js";
 import {
   Deposits,
   Escrow,
+  Fees,
   Payouts,
+  Testing,
   Transactions,
   Transfers,
   Users,
   Wallets,
+  WebhookSubscriptions,
   type Transport,
 } from "./resources.js";
 import { Webhooks } from "./webhooks.js";
@@ -23,6 +26,8 @@ export interface HostPayOptions {
   maxRetries?: number;
   /** Override fetch (for tests or custom agents). Defaults to global fetch. */
   fetch?: typeof fetch;
+  /** Appended to the User-Agent, e.g. "Fataba-Platform/1.0". */
+  appInfo?: string;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -42,7 +47,7 @@ class HttpTransport implements Transport {
     this.auth = {
       "api-key": opts.apiKey,
       "secret-key": opts.secretKey,
-      "User-Agent": "hostpay-node/0.2.2",
+      "User-Agent": "hostpay-node/0.3.0" + (opts.appInfo ? ` ${opts.appInfo}` : ""),
     };
   }
 
@@ -126,6 +131,8 @@ export class HostPay {
   readonly transactions: Transactions;
   readonly payouts: Payouts;
   readonly escrow: Escrow;
+  readonly fees: Fees;
+  readonly testing: Testing;
   readonly webhooks: Webhooks;
 
   constructor(opts: HostPayOptions) {
@@ -140,6 +147,8 @@ export class HostPay {
     this.transactions = new Transactions(t);
     this.payouts = new Payouts(t);
     this.escrow = new Escrow(t);
-    this.webhooks = new Webhooks();
+    this.fees = new Fees(t);
+    this.testing = new Testing(t);
+    this.webhooks = new Webhooks(new WebhookSubscriptions(t));
   }
 }

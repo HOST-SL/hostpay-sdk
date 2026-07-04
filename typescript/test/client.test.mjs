@@ -145,3 +145,45 @@ test("escrow methods forward idempotency key", async () => {
     ["/api/v1/escrow/esc_1/refund", "ref-1"],
   ]);
 });
+
+test("fees, sync, testing, and subscription paths", async () => {
+  const seen = [];
+  const client = makeClient((url, init) => {
+    seen.push([init.method ?? "GET", new URL(url).pathname, init.body ? JSON.parse(init.body) : null]);
+    return new Response(JSON.stringify({}), { status: 200 });
+  });
+
+  await client.fees.summary();
+  await client.fees.estimateDeposit({ amount: 100, paymentMethod: "card", isInternational: true });
+  await client.transactions.sync("mnm_ref_1");
+  await client.testing.simulateMonimeWebhook({ transactionId: "txn_1" });
+  await client.webhooks.subscriptions.create({ targetUrl: "https://f.example/hook", events: ["payout.failed"] });
+  await client.webhooks.subscriptions.update("sub_1", { active: false });
+  await client.webhooks.subscriptions.rotateSecret("sub_1");
+
+  assert.deepEqual(seen, [
+    ["GET", "/api/v1/fees/summary", null],
+    ["POST", "/api/v1/fees/estimate/deposit", { amount: 100, payment_method: "card", is_international: true }],
+    ["POST", "/api/v1/transactions/sync/mnm_ref_1", null],
+    ["POST", "/api/v1/testing/simulate-monime-webhook", { transaction_id: "txn_1", status: "successful" }],
+    ["POST", "/api/v1/webhooks/subscriptions", { target_url: "https://f.example/hook", events: ["payout.failed"] }],
+    ["PATCH", "/api/v1/webhooks/subscriptions/sub_1", { active: false }],
+    ["POST", "/api/v1/webhooks/subscriptions/sub_1/rotate-secret", null],
+  ]);
+});
+
+test("appInfo appended to User-Agent", async () => {
+  let ua;
+  const client = new HostPay({
+    apiKey: "ak-x",
+    secretKey: "sk-y",
+    baseUrl: "https://api.test",
+    appInfo: "Fataba-Platform/1.0",
+    fetch: async (url, init) => {
+      ua = init.headers["User-Agent"];
+      return new Response(JSON.stringify({}), { status: 200 });
+    },
+  });
+  await client.fees.summary();
+  assert.match(ua, /^hostpay-node\/\d+\.\d+\.\d+ Fataba-Platform\/1\.0$/);
+});
