@@ -6243,8 +6243,26 @@
     },
     "/api/v1/escrow/hold": {
       "post": {
-        "description": "Hold funds from a user wallet in the application's escrow wallet.",
+        "description": "Hold funds from a user wallet in the application's escrow wallet.\n\nSupports idempotency via the Idempotency-Key header \u2014 retries with the\nsame key return the cached result instead of creating a duplicate hold.",
         "operationId": "hold_funds_api_v1_escrow_hold_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -6291,7 +6309,7 @@
     },
     "/api/v1/escrow/{transaction_id}/refund": {
       "post": {
-        "description": "Refund held escrow funds back to the original sender.",
+        "description": "Refund held escrow funds back to the original sender.\n\nSupports idempotency via the Idempotency-Key header.",
         "operationId": "refund_funds_api_v1_escrow__transaction_id__refund_post",
         "parameters": [
           {
@@ -6302,6 +6320,22 @@
               "format": "uuid",
               "title": "Transaction Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
             }
           }
         ],
@@ -6341,7 +6375,7 @@
     },
     "/api/v1/escrow/{transaction_id}/release": {
       "post": {
-        "description": "Release previously held escrow funds to a recipient wallet.",
+        "description": "Release previously held escrow funds to a recipient wallet.\n\nSupports idempotency via the Idempotency-Key header.",
         "operationId": "release_funds_api_v1_escrow__transaction_id__release_post",
         "parameters": [
           {
@@ -6352,6 +6386,22 @@
               "format": "uuid",
               "title": "Transaction Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
             }
           }
         ],

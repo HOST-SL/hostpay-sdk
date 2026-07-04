@@ -224,24 +224,46 @@ class Payouts(_Resource):
 
 class Escrow(_Resource):
     def hold(
-        self, wallet_id: str, amount: float, description: Optional[str] = None
+        self,
+        wallet_id: str,
+        amount: float,
+        description: Optional[str] = None,
+        idempotency_key: Optional[str] = None,
     ) -> EscrowResponse:
-        return self._t.request("POST", "/api/v1/escrow/hold", json={
-            "wallet_id": wallet_id,
-            "amount": amount,
-            "description": description,
-        })
+        return self._t.request(
+            "POST",
+            "/api/v1/escrow/hold",
+            json={
+                "wallet_id": wallet_id,
+                "amount": amount,
+                "description": description,
+            },
+            idempotency_key=idempotency_key,
+        )
 
     def release(
-        self, transaction_id: str, recipient_wallet_id: str, amount: Optional[float] = None
+        self,
+        transaction_id: str,
+        recipient_wallet_id: str,
+        amount: Optional[float] = None,
+        idempotency_key: Optional[str] = None,
     ) -> EscrowResponse:
         return self._t.request(
             "POST",
             f"/api/v1/escrow/{transaction_id}/release",
             json={"recipient_wallet_id": recipient_wallet_id, "amount": amount},
+            idempotency_key=idempotency_key,
         )
 
-    def refund(self, transaction_id: str, amount: Optional[float] = None) -> EscrowResponse:
+    def refund(
+        self,
+        transaction_id: str,
+        amount: Optional[float] = None,
+        idempotency_key: Optional[str] = None,
+    ) -> EscrowResponse:
         return self._t.request(
-            "POST", f"/api/v1/escrow/{transaction_id}/refund", json={"amount": amount}
+            "POST",
+            f"/api/v1/escrow/{transaction_id}/refund",
+            json={"amount": amount},
+            idempotency_key=idempotency_key,
         )

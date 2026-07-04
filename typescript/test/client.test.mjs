@@ -127,3 +127,21 @@ test("wallets.list passes query params", async () => {
   assert.equal(seen, "https://api.test/api/v1/wallets/?is_active=true");
   assert.equal(wallets[0].id, "w1");
 });
+
+test("escrow methods forward idempotency key", async () => {
+  const seen = [];
+  const client = makeClient((url, init) => {
+    seen.push([new URL(url).pathname, init.headers["Idempotency-Key"]]);
+    return new Response(JSON.stringify({ id: "esc_1" }), { status: 200 });
+  });
+
+  await client.escrow.hold({ walletId: "w1", amount: 10, idempotencyKey: "hold-1" });
+  await client.escrow.release("esc_1", { recipientWalletId: "w2", idempotencyKey: "rel-1" });
+  await client.escrow.refund("esc_1", { idempotencyKey: "ref-1" });
+
+  assert.deepEqual(seen, [
+    ["/api/v1/escrow/hold", "hold-1"],
+    ["/api/v1/escrow/esc_1/release", "rel-1"],
+    ["/api/v1/escrow/esc_1/refund", "ref-1"],
+  ]);
+});

@@ -694,6 +694,9 @@ export interface paths {
         /**
          * Hold Funds
          * @description Hold funds from a user wallet in the application's escrow wallet.
+         *
+         *     Supports idempotency via the Idempotency-Key header — retries with the
+         *     same key return the cached result instead of creating a duplicate hold.
          */
         post: operations["hold_funds_api_v1_escrow_hold_post"];
         delete?: never;
@@ -714,6 +717,8 @@ export interface paths {
         /**
          * Refund Funds
          * @description Refund held escrow funds back to the original sender.
+         *
+         *     Supports idempotency via the Idempotency-Key header.
          */
         post: operations["refund_funds_api_v1_escrow__transaction_id__refund_post"];
         delete?: never;
@@ -734,6 +739,8 @@ export interface paths {
         /**
          * Release Funds
          * @description Release previously held escrow funds to a recipient wallet.
+         *
+         *     Supports idempotency via the Idempotency-Key header.
          */
         post: operations["release_funds_api_v1_escrow__transaction_id__release_post"];
         delete?: never;
@@ -5188,7 +5195,9 @@ export interface operations {
     hold_funds_api_v1_escrow_hold_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5221,7 +5230,9 @@ export interface operations {
     refund_funds_api_v1_escrow__transaction_id__refund_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
             path: {
                 transaction_id: string;
             };
@@ -5252,7 +5263,9 @@ export interface operations {
     release_funds_api_v1_escrow__transaction_id__release_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
             path: {
                 transaction_id: string;
             };

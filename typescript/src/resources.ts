@@ -254,6 +254,7 @@ export class Escrow extends Resource {
     walletId: string;
     amount: number;
     description?: string;
+    idempotencyKey?: string;
   }): Promise<EscrowModel> {
     return this.t.request("POST", "/api/v1/escrow/hold", {
       body: {
@@ -261,24 +262,30 @@ export class Escrow extends Resource {
         amount: params.amount,
         description: params.description,
       },
+      idempotencyKey: params.idempotencyKey,
     });
   }
 
   release(
     transactionId: string,
-    params: { recipientWalletId: string; amount?: number },
+    params: { recipientWalletId: string; amount?: number; idempotencyKey?: string },
   ): Promise<EscrowModel> {
     return this.t.request("POST", `/api/v1/escrow/${transactionId}/release`, {
       body: {
         recipient_wallet_id: params.recipientWalletId,
         amount: params.amount,
       },
+      idempotencyKey: params.idempotencyKey,
     });
   }
 
-  refund(transactionId: string, params: { amount?: number } = {}): Promise<EscrowModel> {
+  refund(
+    transactionId: string,
+    params: { amount?: number; idempotencyKey?: string } = {},
+  ): Promise<EscrowModel> {
     return this.t.request("POST", `/api/v1/escrow/${transactionId}/refund`, {
       body: { amount: params.amount },
+      idempotencyKey: params.idempotencyKey,
     });
   }
 }

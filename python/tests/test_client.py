@@ -138,3 +138,24 @@ def test_wallets_list_passes_query_params():
     assert seen["path"] == "/api/v1/wallets/"
     assert seen["query"] == {"is_active": "true"}
     assert wallets[0]["id"] == "w1"
+
+
+def test_escrow_methods_forward_idempotency_key():
+    """Fataba report: escrow is money-moving, so retried POSTs must carry the
+    caller's Idempotency-Key like deposits/transfers/payouts do."""
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append((request.url.path, request.headers.get("Idempotency-Key")))
+        return httpx.Response(200, json={"id": "esc_1"})
+
+    client = _client(handler)
+    client.escrow.hold(wallet_id="w1", amount=10, idempotency_key="hold-1")
+    client.escrow.release("esc_1", recipient_wallet_id="w2", idempotency_key="rel-1")
+    client.escrow.refund("esc_1", idempotency_key="ref-1")
+
+    assert seen == [
+        ("/api/v1/escrow/hold", "hold-1"),
+        ("/api/v1/escrow/esc_1/release", "rel-1"),
+        ("/api/v1/escrow/esc_1/refund", "ref-1"),
+    ]
