@@ -1,5 +1,5 @@
 """HostPay Python SDK."""
-from ._client import HostPay
+from ._client import AsyncHostPay, HostPay
 from ._object import HostPayObject
 from .errors import (
     APIConnectionError,
@@ -16,6 +16,7 @@ from ._client import _VERSION as __version__
 
 __all__ = [
     "HostPay",
+    "AsyncHostPay",
     "HostPayObject",
     "HostPayError",
     "AuthenticationError",

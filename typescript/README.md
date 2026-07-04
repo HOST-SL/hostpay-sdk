@@ -9,7 +9,7 @@ Server-side only (it uses your `secret-key`). Node 18+, zero runtime dependencie
 ## Install
 
 ```bash
-npm install @hostpay/sdk        # once published
+npm install @hostpay/sdk
 ```
 
 ## Quickstart

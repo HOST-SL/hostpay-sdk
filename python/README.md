@@ -1,14 +1,12 @@
 # HostPay Python SDK
 
 A small, typed client for the [HostPay](https://hpay.host-sl.com) payments API —
-wallets, deposits, transfers, payouts, escrow, transaction queries, user/wallet lifecycle management, and webhook verification.
+wallets, deposits, transfers, payouts, escrow, transaction queries, user/wallet lifecycle management, and webhook verification. Ships both a sync (`HostPay`) and an async (`AsyncHostPay`) client.
 
 ## Install
 
 ```bash
-pip install hostpay          # once published
-# or, from this repo:
-pip install ./sdk/python
+pip install hostpay
 ```
 
 Requires Python 3.8+ and `httpx`.
@@ -43,6 +41,26 @@ client.payouts.mobile_money(wallet_id=wallet.id, amount=5, phone_number="+232790
 hold = client.escrow.hold(wallet_id=wallet.id, amount=10)
 client.escrow.release(hold.id, recipient_wallet_id="...")
 ```
+
+## Async
+
+`AsyncHostPay` exposes the exact same surface — every method awaited, built on
+`httpx.AsyncClient`. Use it from FastAPI, aiohttp, or any asyncio app:
+
+```python
+from hostpay import AsyncHostPay
+
+async with AsyncHostPay(api_key="ak-...", secret_key="sk-...") as client:
+    user = await client.users.create(
+        app_user_id="user_123", name="Alice", phone_number="+23279000000"
+    )
+    wallet = await client.wallets.create(user.id)
+    await client.deposits.mobile_money(wallet_id=wallet.id, amount=100)
+```
+
+Outside a context manager, call `await client.aclose()` when done. Webhook
+verification (`client.webhooks.construct_event`) is pure crypto with no I/O,
+so it stays a plain synchronous call on both clients.
 
 ## Authentication
 

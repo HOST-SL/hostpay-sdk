@@ -4,7 +4,7 @@ Official client libraries for the HostPay API.
 
 | Language | Status | Path |
 | --- | --- | --- |
-| Python | ✅ available | [`python/`](python/) |
+| Python | ✅ available — sync + async clients | [`python/`](python/) |
 | TypeScript | ✅ available | [`typescript/`](typescript/) |
 
 The SDKs are **hybrid**: a hand-written ergonomic client over the money surface
