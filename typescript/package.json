@@ -48,7 +48,8 @@
     "generate": "openapi-typescript ../openapi.json -o src/generated.ts",
     "pretest": "tsc",
     "test": "node --test",
-    "prepublishOnly": "npm run build && npm test"
+    "check:version": "node -e \"const v=require('./package.json').version,s=require('fs').readFileSync('src/client.ts','utf8');if(!s.includes('hostpay-node/'+v)){console.error('src/client.ts User-Agent is stale: expected hostpay-node/'+v);process.exit(1)}\"",
+    "prepublishOnly": "npm run check:version && npm run build && npm test"
   },
   "devDependencies": {
     "@types/node": "^20",

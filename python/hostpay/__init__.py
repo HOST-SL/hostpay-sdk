@@ -12,7 +12,7 @@ from .errors import (
 )
 from .models import EscrowResponse, TransactionResponse, UserRead, WalletRead
 
-__version__ = "0.1.0"
+from ._client import _VERSION as __version__
 
 __all__ = [
     "HostPay",

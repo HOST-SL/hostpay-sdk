@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import time
+from importlib.metadata import PackageNotFoundError, version as _pkg_version
 from typing import Any, Dict, Optional
 
 import httpx
@@ -20,6 +21,13 @@ from .resources import (
 from .webhooks import Webhooks
 
 DEFAULT_BASE_URL = "https://hpay-api.host-sl.com"
+
+# Single-sourced from pyproject.toml via the installed package metadata, so it
+# can never drift from the released version again.
+try:
+    _VERSION = _pkg_version("hostpay")
+except PackageNotFoundError:  # uninstalled source checkout
+    _VERSION = "0.0.0.dev0"
 
 
 class _Transport:
@@ -40,7 +48,7 @@ class _Transport:
         self._auth = {
             "api-key": api_key,
             "secret-key": secret_key,
-            "User-Agent": "hostpay-python/0.1.0",
+            "User-Agent": f"hostpay-python/{_VERSION}",
         }
         self._client = http_client or httpx.Client(
             base_url=base_url.rstrip("/"), timeout=timeout

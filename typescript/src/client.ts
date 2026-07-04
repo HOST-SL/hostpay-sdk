@@ -42,7 +42,7 @@ class HttpTransport implements Transport {
     this.auth = {
       "api-key": opts.apiKey,
       "secret-key": opts.secretKey,
-      "User-Agent": "hostpay-node/0.1.0",
+      "User-Agent": "hostpay-node/0.2.1",
     };
   }
 

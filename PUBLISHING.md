@@ -57,7 +57,7 @@ way.
 
 1. Bump the version in the package you're releasing:
    - Python: `python/pyproject.toml` → `version`
-   - TS: `typescript/package.json` → `version`
+   - TS: `typescript/package.json` → `version`, and the `hostpay-node/x.y.z` User-Agent in `typescript/src/client.ts` (`npm run check:version` / prepublish enforces the match)
 2. Commit, then tag and push:
    ```bash
    git tag python-v0.1.0 && git push origin python-v0.1.0   # Python
