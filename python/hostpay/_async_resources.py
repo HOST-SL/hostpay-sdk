@@ -61,6 +61,31 @@ class Users(_Resource):
             "username": username,
         })
 
+
+    async def patch(
+        self,
+        user_id: str,
+        name: Optional[str] = None,
+        email: Optional[str] = None,
+        username: Optional[str] = None,
+        phone_number: Optional[str] = None,
+        is_active: Optional[bool] = None,
+    ) -> UserRead:
+        """Partial update — only the fields you pass are changed
+        (app_user_id is immutable)."""
+        body = {
+            k: v
+            for k, v in {
+                "name": name,
+                "email": email,
+                "username": username,
+                "phone_number": phone_number,
+                "is_active": is_active,
+            }.items()
+            if v is not None
+        }
+        return await self._t.request("PATCH", f"/api/v1/users/{user_id}/", json=body)
+
     async def delete(self, user_id: str) -> Any:
         return await self._t.request("DELETE", f"/api/v1/users/{user_id}/")
 
@@ -384,4 +409,72 @@ class WebhookSubscriptions(_Resource):
         """Returns the new signing secret once."""
         return await self._t.request(
             "POST", f"/api/v1/webhooks/subscriptions/{subscription_id}/rotate-secret"
+        )
+
+
+class Connect(_Resource):
+    """Stripe Connect onboarding for user payout accounts."""
+
+    async def complete_onboarding(
+        self,
+        wallet_id: str,
+        individual: dict,
+        business_profile: dict,
+        client_ip: str,
+        card_token: Optional[str] = None,
+    ) -> Any:
+        """Submit identity + business details for the wallet owner's Connect
+        account.
+
+        client_ip must be the END CUSTOMER's IP address — Stripe records it
+        as evidence of Terms-of-Service acceptance. Passing your server's IP
+        is a compliance violation, so the SDK refuses to guess it.
+        """
+        if not client_ip:
+            raise ValueError(
+                "client_ip is required: Stripe records it for TOS acceptance "
+                "and it must be the end customer's IP, not your server's"
+            )
+        return await self._t.request(
+            "POST",
+            "/api/v1/transactions/wallet/complete-onboarding/",
+            json={
+                "wallet_id": wallet_id,
+                "individual": individual,
+                "business_profile": business_profile,
+                "card_token": card_token,
+            },
+            headers={"X-Forwarded-For": client_ip},
+        )
+
+    async def upload_verification_document(
+        self,
+        wallet_id: str,
+        document: Any,
+        document_side: str,
+        filename: str = "document.jpg",
+        mime_type: str = "image/jpeg",
+    ) -> Any:
+        """Upload an identity document (JPEG/PNG/PDF, max 10 MB).
+
+        document: bytes or a file-like object. document_side: 'front' | 'back'.
+        """
+        return await self._t.request(
+            "POST",
+            f"/api/v1/transactions/wallet/{wallet_id}/connect/verification-document",
+            data={"document_side": document_side},
+            files={"file": (filename, document, mime_type)},
+        )
+
+    async def status(self, wallet_id: str) -> Any:
+        """Sync and return the Connect account's verification status."""
+        return await self._t.request(
+            "GET", f"/api/v1/transactions/wallet/{wallet_id}/connect/status"
+        )
+
+    async def delete(self, wallet_id: str) -> Any:
+        return await self._t.request(
+            "POST",
+            "/api/v1/transactions/wallet/connect/delete",
+            params={"wallet_id": wallet_id},
         )

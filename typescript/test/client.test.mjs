@@ -187,3 +187,56 @@ test("appInfo appended to User-Agent", async () => {
   await client.fees.summary();
   assert.match(ua, /^hostpay-node\/\d+\.\d+\.\d+ Fataba-Platform\/1\.0$/);
 });
+
+test("users.patch sends only provided fields", async () => {
+  let seen;
+  const client = makeClient((url, init) => {
+    seen = { method: init.method, path: new URL(url).pathname, body: JSON.parse(init.body) };
+    return new Response(JSON.stringify({ id: "usr_1" }), { status: 200 });
+  });
+  await client.users.patch("usr_1", { name: "New Name", isActive: false });
+  assert.equal(seen.method, "PATCH");
+  assert.equal(seen.path, "/api/v1/users/usr_1/");
+  assert.deepEqual(seen.body, { name: "New Name", is_active: false });
+});
+
+test("connect onboarding requires and forwards clientIp", async () => {
+  let seen;
+  const client = makeClient((url, init) => {
+    seen = { xff: init.headers["X-Forwarded-For"], body: JSON.parse(init.body) };
+    return new Response(JSON.stringify({ account_id: "acct_1" }), { status: 200 });
+  });
+  await client.connect.completeOnboarding({
+    walletId: "w1",
+    individual: { first_name: "Alice", address: { country: "SL" } },
+    businessProfile: { mcc: "5734" },
+    clientIp: "41.223.10.5",
+  });
+  assert.equal(seen.xff, "41.223.10.5");
+  assert.equal(seen.body.wallet_id, "w1");
+
+  assert.throws(
+    () => client.connect.completeOnboarding({ walletId: "w1", individual: {}, businessProfile: {}, clientIp: "" }),
+    /clientIp is required/,
+  );
+});
+
+test("connect document upload sends FormData without JSON content-type", async () => {
+  let seen;
+  const client = makeClient((url, init) => {
+    seen = { path: new URL(url).pathname, body: init.body, contentType: init.headers["Content-Type"] };
+    return new Response(JSON.stringify({ payouts_enabled: false }), { status: 200 });
+  });
+  await client.connect.uploadVerificationDocument({
+    walletId: "w1",
+    document: new Uint8Array([1, 2, 3]),
+    documentSide: "front",
+    filename: "id.png",
+    mimeType: "image/png",
+  });
+  assert.equal(seen.path, "/api/v1/transactions/wallet/w1/connect/verification-document");
+  assert.equal(seen.contentType, undefined); // fetch adds the multipart boundary
+  assert.ok(seen.body instanceof FormData);
+  assert.equal(seen.body.get("document_side"), "front");
+  assert.equal(seen.body.get("file").name, "id.png");
+});

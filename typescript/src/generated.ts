@@ -1652,7 +1652,12 @@ export interface paths {
         delete: operations["delete_user_api_v1_users__user_id___delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Partial Update User
+         * @description Partially update a user — only the fields present in the body are changed.
+         *     app_user_id is immutable.
+         */
+        patch: operations["partial_update_user_api_v1_users__user_id___patch"];
         trace?: never;
     };
     "/api/v1/users/{user_id}/disable": {
@@ -3716,6 +3721,24 @@ export interface components {
              * Username
              * @example johndoe
              */
+            username?: string | null;
+        };
+        /**
+         * UserPartialUpdate
+         * @description PATCH body — only the fields provided are applied.
+         *
+         *     app_user_id is immutable and deliberately absent.
+         */
+        UserPartialUpdate: {
+            /** Email */
+            email?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Name */
+            name?: string | null;
+            /** Phone Number */
+            phone_number?: string | null;
+            /** Username */
             username?: string | null;
         };
         /** UserRead */
@@ -6617,6 +6640,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    partial_update_user_api_v1_users__user_id___patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserPartialUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
                 };
             };
             /** @description Validation Error */

@@ -5,7 +5,13 @@ export interface Transport {
   request(
     method: string,
     path: string,
-    init?: { body?: unknown; idempotencyKey?: string; query?: Record<string, unknown> },
+    init?: {
+      body?: unknown;
+      idempotencyKey?: string;
+      query?: Record<string, unknown>;
+      headers?: Record<string, string>;
+      formData?: FormData;
+    },
   ): Promise<any>;
 }
 
@@ -70,6 +76,26 @@ export class Users extends Resource {
         username: params.username,
       },
     });
+  }
+
+  /** Partial update — only the fields you pass are changed (appUserId is immutable). */
+  patch(
+    userId: string,
+    params: {
+      name?: string;
+      email?: string;
+      username?: string;
+      phoneNumber?: string;
+      isActive?: boolean;
+    },
+  ): Promise<User> {
+    const body: Record<string, unknown> = {};
+    if (params.name !== undefined) body.name = params.name;
+    if (params.email !== undefined) body.email = params.email;
+    if (params.username !== undefined) body.username = params.username;
+    if (params.phoneNumber !== undefined) body.phone_number = params.phoneNumber;
+    if (params.isActive !== undefined) body.is_active = params.isActive;
+    return this.t.request("PATCH", `/api/v1/users/${userId}/`, { body });
   }
 
   delete(userId: string): Promise<any> {
@@ -412,5 +438,68 @@ export class WebhookSubscriptions extends Resource {
   /** Returns the new signing secret once. */
   rotateSecret(subscriptionId: string): Promise<any> {
     return this.t.request("POST", `/api/v1/webhooks/subscriptions/${subscriptionId}/rotate-secret`);
+  }
+}
+
+export class Connect extends Resource {
+  /**
+   * Submit identity + business details for the wallet owner's Stripe Connect
+   * account. `clientIp` must be the END CUSTOMER's IP address — Stripe records
+   * it as evidence of Terms-of-Service acceptance, so the SDK refuses to guess it.
+   */
+  completeOnboarding(params: {
+    walletId: string;
+    individual: Record<string, unknown>;
+    businessProfile: Record<string, unknown>;
+    clientIp: string;
+    cardToken?: string;
+  }): Promise<any> {
+    if (!params.clientIp) {
+      throw new Error(
+        "clientIp is required: Stripe records it for TOS acceptance and it must be the end customer's IP, not your server's",
+      );
+    }
+    return this.t.request("POST", "/api/v1/transactions/wallet/complete-onboarding/", {
+      body: {
+        wallet_id: params.walletId,
+        individual: params.individual,
+        business_profile: params.businessProfile,
+        card_token: params.cardToken,
+      },
+      headers: { "X-Forwarded-For": params.clientIp },
+    });
+  }
+
+  /** Upload an identity document (JPEG/PNG/PDF, max 10 MB). */
+  uploadVerificationDocument(params: {
+    walletId: string;
+    document: Blob | Uint8Array;
+    documentSide: "front" | "back";
+    filename?: string;
+    mimeType?: string;
+  }): Promise<any> {
+    const blob =
+      params.document instanceof Blob
+        ? params.document
+        : new Blob([params.document as Uint8Array<ArrayBuffer>], { type: params.mimeType ?? "image/jpeg" });
+    const formData = new FormData();
+    formData.set("document_side", params.documentSide);
+    formData.set("file", blob, params.filename ?? "document.jpg");
+    return this.t.request(
+      "POST",
+      `/api/v1/transactions/wallet/${params.walletId}/connect/verification-document`,
+      { formData },
+    );
+  }
+
+  /** Sync and return the Connect account's verification status. */
+  status(walletId: string): Promise<any> {
+    return this.t.request("GET", `/api/v1/transactions/wallet/${walletId}/connect/status`);
+  }
+
+  delete(walletId: string): Promise<any> {
+    return this.t.request("POST", "/api/v1/transactions/wallet/connect/delete", {
+      query: { wallet_id: walletId },
+    });
   }
 }

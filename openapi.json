@@ -3564,6 +3564,69 @@
         "title": "UserCreate",
         "type": "object"
       },
+      "UserPartialUpdate": {
+        "description": "PATCH body \u2014 only the fields provided are applied.\n\napp_user_id is immutable and deliberately absent.",
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "title": "UserPartialUpdate",
+        "type": "object"
+      },
       "UserRead": {
         "properties": {
           "app_user_id": {
@@ -8623,6 +8686,64 @@
           }
         ],
         "summary": "Get User",
+        "tags": [
+          "Application Users Endpoints"
+        ]
+      },
+      "patch": {
+        "description": "Partially update a user \u2014 only the fields present in the body are changed.\napp_user_id is immutable.",
+        "operationId": "partial_update_user_api_v1_users__user_id___patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPartialUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKey": [],
+            "SecretKey": []
+          }
+        ],
+        "summary": "Partial Update User",
         "tags": [
           "Application Users Endpoints"
         ]

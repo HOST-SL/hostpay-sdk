@@ -1,5 +1,6 @@
 import { APIConnectionError, errorFromStatus } from "./errors.js";
 import {
+  Connect,
   Deposits,
   Escrow,
   Fees,
@@ -47,14 +48,20 @@ class HttpTransport implements Transport {
     this.auth = {
       "api-key": opts.apiKey,
       "secret-key": opts.secretKey,
-      "User-Agent": "hostpay-node/0.3.0" + (opts.appInfo ? ` ${opts.appInfo}` : ""),
+      "User-Agent": "hostpay-node/0.4.0" + (opts.appInfo ? ` ${opts.appInfo}` : ""),
     };
   }
 
   async request(
     method: string,
     path: string,
-    init: { body?: unknown; idempotencyKey?: string; query?: Record<string, unknown> } = {},
+    init: {
+      body?: unknown;
+      idempotencyKey?: string;
+      query?: Record<string, unknown>;
+      headers?: Record<string, string>;
+      formData?: FormData;
+    } = {},
   ): Promise<any> {
     if (init.query) {
       const qs = new URLSearchParams();
@@ -64,13 +71,16 @@ class HttpTransport implements Transport {
       const q = qs.toString();
       if (q) path += (path.includes("?") ? "&" : "?") + q;
     }
-    const headers: Record<string, string> = {
-      ...this.auth,
-      "Content-Type": "application/json",
-    };
+    const headers: Record<string, string> = { ...this.auth, ...(init.headers ?? {}) };
     if (init.idempotencyKey) headers["Idempotency-Key"] = init.idempotencyKey;
-    const payload =
-      init.body !== undefined ? JSON.stringify(init.body) : undefined;
+    let payload: string | FormData | undefined;
+    if (init.formData) {
+      // fetch sets the multipart boundary itself — no Content-Type here.
+      payload = init.formData;
+    } else if (init.body !== undefined) {
+      headers["Content-Type"] = "application/json";
+      payload = JSON.stringify(init.body);
+    }
 
     let lastErr: unknown;
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
@@ -131,6 +141,7 @@ export class HostPay {
   readonly transactions: Transactions;
   readonly payouts: Payouts;
   readonly escrow: Escrow;
+  readonly connect: Connect;
   readonly fees: Fees;
   readonly testing: Testing;
   readonly webhooks: Webhooks;
@@ -147,6 +158,7 @@ export class HostPay {
     this.transactions = new Transactions(t);
     this.payouts = new Payouts(t);
     this.escrow = new Escrow(t);
+    this.connect = new Connect(t);
     this.fees = new Fees(t);
     this.testing = new Testing(t);
     this.webhooks = new Webhooks(new WebhookSubscriptions(t));

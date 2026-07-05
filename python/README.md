@@ -85,6 +85,8 @@ client.payouts.mobile_money(
 - `client.webhooks.subscriptions` — `create()`, `list()`, `update()`, `delete()`, `rotate_secret()`; the create/rotate response includes the signing secret **once**
 - `client.transactions.sync(reference_id)` — instant post-payment reconciliation
 - `client.testing.simulate_monime_webhook(transaction_id, status=...)` — complete or fail a pending Test Mode deposit (test keys only)
+- `client.connect` — Stripe Connect onboarding for payout accounts: `complete_onboarding()` (requires the **end customer's IP** for Stripe TOS acceptance), `upload_verification_document()` (JPEG/PNG/PDF ≤ 10 MB), `status()`, `delete()`
+- `client.users.patch(user_id, ...)` — partial update; only the fields you pass change
 - `HostPay(..., app_info="YourApp/1.0")` — identify your platform; appended to the User-Agent
 
 All of these exist on `AsyncHostPay` too.

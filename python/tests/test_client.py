@@ -256,3 +256,85 @@ def test_app_info_appended_to_user_agent():
     client.fees.summary()
     assert seen["ua"].startswith("hostpay-python/")
     assert seen["ua"].endswith(" Fataba-Platform/1.0")
+
+
+def test_users_patch_sends_only_provided_fields():
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["method"] = request.method
+        seen["path"] = request.url.path
+        seen["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"id": "usr_1"})
+
+    client = _client(handler)
+    client.users.patch("usr_1", name="New Name", is_active=False)
+    assert seen["method"] == "PATCH"
+    assert seen["path"] == "/api/v1/users/usr_1/"
+    assert seen["body"] == {"name": "New Name", "is_active": False}
+
+
+def test_connect_onboarding_requires_and_forwards_client_ip():
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["xff"] = request.headers.get("X-Forwarded-For")
+        seen["body"] = json.loads(request.content)
+        seen["path"] = request.url.path
+        return httpx.Response(200, json={"account_id": "acct_1"})
+
+    client = _client(handler)
+    client.connect.complete_onboarding(
+        wallet_id="w1",
+        individual={"first_name": "Alice", "address": {"country": "SL"}},
+        business_profile={"mcc": "5734"},
+        client_ip="41.223.10.5",
+    )
+    assert seen["path"] == "/api/v1/transactions/wallet/complete-onboarding/"
+    assert seen["xff"] == "41.223.10.5"
+    assert seen["body"]["wallet_id"] == "w1"
+
+    # the SDK must refuse to guess the TOS-acceptance IP
+    with pytest.raises(ValueError):
+        client.connect.complete_onboarding(
+            wallet_id="w1", individual={}, business_profile={}, client_ip="",
+        )
+
+
+def test_connect_document_upload_is_multipart():
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["content_type"] = request.headers.get("Content-Type", "")
+        seen["body"] = request.content
+        seen["path"] = request.url.path
+        return httpx.Response(200, json={"payouts_enabled": False})
+
+    client = _client(handler)
+    client.connect.upload_verification_document(
+        wallet_id="w1",
+        document=b"%PDF-1.4 fake",
+        document_side="front",
+        filename="passport.pdf",
+        mime_type="application/pdf",
+    )
+    assert seen["path"] == "/api/v1/transactions/wallet/w1/connect/verification-document"
+    assert seen["content_type"].startswith("multipart/form-data")
+    assert b'name="document_side"' in seen["body"] and b"front" in seen["body"]
+    assert b"passport.pdf" in seen["body"] and b"%PDF-1.4 fake" in seen["body"]
+
+
+def test_connect_status_and_delete_paths():
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append((request.method, request.url.path, dict(request.url.params)))
+        return httpx.Response(200, json={})
+
+    client = _client(handler)
+    client.connect.status("w1")
+    client.connect.delete("w1")
+    assert calls == [
+        ("GET", "/api/v1/transactions/wallet/w1/connect/status", {}),
+        ("POST", "/api/v1/transactions/wallet/connect/delete", {"wallet_id": "w1"}),
+    ]

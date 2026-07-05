@@ -12,6 +12,7 @@ from . import _async_resources
 from ._object import HostPayObject, _wrap
 from .errors import APIConnectionError, error_from_status
 from .resources import (
+    Connect,
     Deposits,
     Escrow,
     Fees,
@@ -68,17 +69,23 @@ class _Transport:
         json: Optional[dict] = None,
         params: Optional[dict] = None,
         idempotency_key: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+        data: Optional[dict] = None,
+        files: Optional[dict] = None,
     ) -> Any:
-        headers: Dict[str, str] = dict(self._auth)
+        hdrs: Dict[str, str] = dict(self._auth)
         if idempotency_key:
-            headers["Idempotency-Key"] = idempotency_key
+            hdrs["Idempotency-Key"] = idempotency_key
+        if headers:
+            hdrs.update(headers)
         # Retry only idempotent-safe conditions: connection errors and 5xx. POSTs
         # are retried too — the API supports Idempotency-Key for money movements.
         last_exc: Optional[Exception] = None
         for attempt in range(self._max_retries + 1):
             try:
                 resp = self._client.request(
-                    method, path, json=json, params=params, headers=headers
+                    method, path, json=json, params=params, data=data,
+                    files=files, headers=hdrs,
                 )
             except httpx.HTTPError as exc:
                 last_exc = exc
@@ -142,6 +149,7 @@ class HostPay:
         self.transactions = Transactions(self._transport)
         self.payouts = Payouts(self._transport)
         self.escrow = Escrow(self._transport)
+        self.connect = Connect(self._transport)
         self.fees = Fees(self._transport)
         self.testing = Testing(self._transport)
         self.webhooks = Webhooks(subscriptions=WebhookSubscriptions(self._transport))
@@ -189,17 +197,23 @@ class _AsyncTransport:
         json: Optional[dict] = None,
         params: Optional[dict] = None,
         idempotency_key: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+        data: Optional[dict] = None,
+        files: Optional[dict] = None,
     ) -> Any:
-        headers: Dict[str, str] = dict(self._auth)
+        hdrs: Dict[str, str] = dict(self._auth)
         if idempotency_key:
-            headers["Idempotency-Key"] = idempotency_key
+            hdrs["Idempotency-Key"] = idempotency_key
+        if headers:
+            hdrs.update(headers)
         # Retry only idempotent-safe conditions: connection errors and 5xx. POSTs
         # are retried too — the API supports Idempotency-Key for money movements.
         last_exc: Optional[Exception] = None
         for attempt in range(self._max_retries + 1):
             try:
                 resp = await self._client.request(
-                    method, path, json=json, params=params, headers=headers
+                    method, path, json=json, params=params, data=data,
+                    files=files, headers=hdrs,
                 )
             except httpx.HTTPError as exc:
                 last_exc = exc
@@ -248,6 +262,7 @@ class AsyncHostPay:
         self.transactions = _async_resources.Transactions(self._transport)
         self.payouts = _async_resources.Payouts(self._transport)
         self.escrow = _async_resources.Escrow(self._transport)
+        self.connect = _async_resources.Connect(self._transport)
         self.fees = _async_resources.Fees(self._transport)
         self.testing = _async_resources.Testing(self._transport)
         # Webhook verification is pure crypto (no I/O) — shared with the sync client.

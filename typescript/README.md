@@ -65,6 +65,8 @@ await client.payouts.mobileMoney({
 - `client.webhooks.subscriptions` — `create()`, `list()`, `update()`, `delete()`, `rotateSecret()`; the create/rotate response includes the signing secret **once**
 - `client.transactions.sync(referenceId)` — instant post-payment reconciliation
 - `client.testing.simulateMonimeWebhook(...)` — complete or fail a pending Test Mode deposit (test keys only)
+- `client.connect` — Stripe Connect onboarding for payout accounts: `completeOnboarding()` (requires the **end customer's IP** for Stripe TOS acceptance), `uploadVerificationDocument()` (JPEG/PNG/PDF ≤ 10 MB), `status()`, `delete()`
+- `client.users.patch(userId, { ... })` — partial update; only the fields you pass change
 - `new HostPay({ ..., appInfo: "YourApp/1.0" })` — identify your platform; appended to the User-Agent
 
 ## Verifying webhooks
