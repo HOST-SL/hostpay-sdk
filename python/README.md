@@ -7,6 +7,8 @@ wallets, deposits, transfers, payouts, escrow, transaction queries, user/wallet 
 
 ```bash
 pip install hostpay
+# or, with uv:
+uv add hostpay
 ```
 
 Requires Python 3.8+ and `httpx`.
